@@ -53,7 +53,7 @@
 			</div>
 			<div class="card-body">
 				<form id="frm" name="frm" theme="simple" method="post" enctype="multipart/form-data" class="mb-0">
-					<!-- Campos ocultos (mesmo do original) -->
+					<!-- Campos ocultos -->
 					<input type="hidden" id="idTamanhoMaximoDescricao" name="exDocumentoDTO.tamanhoMaximoDescricao" value="${exDocumentoDTO.tamanhoMaximoDescricao}" />
 					<input type="hidden" id="alterouModelo" name="exDocumentoDTO.alterouModelo" />
 					<input type="hidden" id="clickSelect" name="clickSelect" />
@@ -109,7 +109,7 @@
 						<c:if test='${ exDocumentoDTO.tipoDocumento == "interno"  && !ehPublicoExterno}'>
 							<div class="col col-12 col-lg-4">
 								<div class="form-group">
-									<label data-toggle="tooltip" title="Preenchimento automÃ¡tico com dados padrÃ£o para agilizar a criaÃ§Ã£o.">
+									<label data-toggle="tooltip" title="Preenchimento automático com dados padrão para agilizar a criação.">
 										<fmt:message key="documento.preenchimento.automatico" />
 									</label>
 									<div class="input-group">
@@ -122,7 +122,7 @@
 											<c:if test="${empty exDocumentoDTO.preenchimento or exDocumentoDTO.preenchimento==0}">
 												<c:set var="desabilitaBtn">d-none</c:set>
 											</c:if>
-											<button type="button" name="btnAlterar" onclick="javascript:alteraPreench()" class="btn btn-sm btn-secondary p-2 ${desabilitaBtn}" title="Gravar alteraÃ§Ãµes">
+											<button type="button" name="btnAlterar" onclick="javascript:alteraPreench()" class="btn btn-sm btn-secondary p-2 ${desabilitaBtn}" title="Gravar alterações">
 												<i class="far fa-edit"></i>
 											</button>
 											<button type="button" name="btnRemover" onclick="javascript:removePreench()" class="btn btn-sm btn-secondary p-2 ${desabilitaBtn}" title="Remover este item">
@@ -149,7 +149,7 @@
 										<option value="${item.idNivelAcesso}" ${item.idNivelAcesso == exDocumentoDTO.nivelAcesso ? 'selected' : ''}>${item.nmNivelAcesso}</option>
 									</c:forEach>
 								</select>
-								<small class="form-text text-muted">Selecione o nÃ­vel de acesso do documento.</small>
+								<small class="form-text text-muted">Selecione o nível de acesso do documento.</small>
 							</div>
 						</div>
 						<div class="col-sm-3">
@@ -165,15 +165,15 @@
 						<div class="row">
 							<div class="col-sm-2">
 								<div class="form-group">
-									<label for="exDocumentoDTO.numExtDoc">NÂº original</label>
+									<label for="exDocumentoDTO.numExtDoc">Nº original</label>
 									<input type="text" name="exDocumentoDTO.numExtDoc" size="16" maxLength="32" value="${exDocumentoDTO.numExtDoc}" class="form-control" />
 								</div>
 							</div>
 							<div class="col-sm-4">
 								<div class="form-group">
-									<label for="exDocumentoDTO.numAntigoDoc">NÂº antigo</label>
+									<label for="exDocumentoDTO.numAntigoDoc">Nº antigo</label>
 									<input type="text" name="exDocumentoDTO.numAntigoDoc" size="16" maxLength="32" value="${exDocumentoDTO.numAntigoDoc}" class="form-control" />
-									<small class="form-text text-muted">(informar o nÃºmero do documento no antigo sistema).</small>
+									<small class="form-text text-muted">(informar o número do documento no antigo sistema).</small>
 								</div>
 							</div>
 						</div>
@@ -193,9 +193,9 @@
 												<input type="hidden" name="campos" value="substituicao" />
 												<input type="hidden" name="campos" value="personalizacao" />
 												<input type="hidden" id="temCossignatarios" value="${not empty exDocumentoDTO.doc.cosignatarios}" />
-												<label>ResponsÃ¡vel pela Assinatura <span class="text-danger">*</span></label>
+												<label>Responsável pela Assinatura <span class="text-danger">*</span></label>
 												<siga:selecao propriedade="subscritor" inputName="exDocumentoDTO.subscritor" modulo="siga" tema="simple" />
-												<small class="form-text text-muted">Selecione a pessoa responsÃ¡vel pela assinatura do documento.</small>
+												<small class="form-text text-muted">Selecione a pessoa responsável pela assinatura do documento.</small>
 											</div>
 										</div>
 										<div class="col-sm-5 d-flex align-items-center">
@@ -203,17 +203,17 @@
 												<input type="checkbox" name="exDocumentoDTO.substituicao" class="form-check-input" id="substitutoSwitch" onclick="javascript:displayTitular(this);" <c:if test="${exDocumentoDTO.substituicao}">checked</c:if> />
 												<label class="form-check-label" for="substitutoSwitch">
 													Substituto
-													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="..."></i>
+													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="Marque se o responsável pela assinatura é um substituto. Ao marcar, aparecerá o campo 'Titular' para indicar quem está sendo substituído."></i>
 												</label>
 												<input type="checkbox" name="exDocumentoDTO.personalizacao" class="form-check-input ml-3" id="personalizacaoSwitch" onclick="javascript:displayPersonalizacao(this);" <c:if test="${exDocumentoDTO.personalizacao}">checked</c:if> />
 												<label class="form-check-label" for="personalizacaoSwitch">
 													Personalizar
-													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="..."></i>
+													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="Permite personalizar a exibição do nome, função, lotação e cidade na assinatura do documento."></i>
 												</label>
 												<input type="checkbox" class="form-check-input ml-3" id="cossignatariosSwitch" onclick="javascript:displayCossignatarios(this);" <c:if test="${not empty exDocumentoDTO.doc.cosignatarios}">checked</c:if> />
 												<label class="form-check-label" for="cossignatariosSwitch">
-													CossignatÃ¡rios
-													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="..."></i>
+													Cossignatários
+													<i class="fas fa-info-circle text-secondary ml-1" data-toggle="tooltip" data-trigger="hover" data-placement="top" title="Marque para adicionar outros assinantes (cossignatários) que também devem assinar o documento em conjunto."></i>
 												</label>
 											</div>
 										</div>
@@ -239,7 +239,7 @@
 					<div class="row js-siga-sp-documento-analisa-alteracao mt-1" id="divCossignatarios" style="display: ${not empty exDocumentoDTO.doc.cosignatarios ? '' : 'none'};">
 						<div class="col-sm-8">
 							<div class="form-group">
-								<label>Outros Assinantes / CossignatÃ¡rios (Opcional)</label>
+								<label>Outros Assinantes / Cossignatários (Opcional)</label>
 								<siga:selecao propriedade="cosignatario" inputName="exDocumentoDTO.cosignatario" modulo="siga" tema="simple" />
 								<small class="form-text text-muted">Selecione pessoas adicionais para assinarem em conjunto.</small>
 							</div>
@@ -251,7 +251,7 @@
 						<div class="row js-siga-sp-documento-analisa-alteracao">
 							<div class="col-sm-8">
 								<div class="form-group">
-									<label>Substituto do ResponsÃ¡vel pela Assinatura <span class="text-danger">*</span></label>
+									<label>Substituto do Responsável pela Assinatura <span class="text-danger">*</span></label>
 									<siga:selecao propriedade="titular" inputName="exDocumentoDTO.titular" tema="simple" modulo="siga" />
 								</div>
 							</div>
@@ -261,21 +261,21 @@
 					<input type="hidden" name="campos" value="nmFuncaoSubscritor" />
 					<input type="hidden" name="exDocumentoDTO.nmFuncaoSubscritor" maxlength="128" id="frm_nmFuncaoSubscritor" value="${exDocumentoDTO.nmFuncaoSubscritor}" />
 					<div id="tr_personalizacao" style="display: ${exDocumentoDTO.personalizacao ? '' : 'none'};">
-						<div class="row ml-1"><h6>PersonalizaÃ§Ã£o</h6></div>
+						<div class="row ml-1"><h6>Personalização</h6></div>
 						<div class="row js-siga-sp-documento-analisa-alteracao">
-							<div class="col-sm-2"><div class="form-group"><label>FunÃ§Ã£o</label><input type="text" id="personalizarFuncao" maxlength="125" class="form-control"></div></div>
-							<div class="col-sm-2"><div class="form-group"><label>LotaÃ§Ã£o</label><input type="text" id="personalizarUnidade" maxlength="125" class="form-control"></div></div>
+							<div class="col-sm-2"><div class="form-group"><label>Função</label><input type="text" id="personalizarFuncao" maxlength="125" class="form-control"></div></div>
+							<div class="col-sm-2"><div class="form-group"><label>Lotação</label><input type="text" id="personalizarUnidade" maxlength="125" class="form-control"></div></div>
 							<div class="col-sm-2"><div class="form-group"><label>Cidade</label><input type="text" id="personalizarLocalidade" maxlength="125" class="form-control"></div></div>
 							<div class="col-sm-4"><div class="form-group"><label>Nome</label><input type="text" id="personalizarNome" maxlength="125" class="form-control"></div></div>
 						</div>
 					</div>
 
-					<!-- DestinatÃ¡rio -->
+					<!-- Destinatário -->
 					<c:if test="${not empty exDocumentoDTO.listaTipoDest}">
 						<div class="row">
 							<div class="col-sm-2">
 								<div class="form-group">
-									<label>DestinatÃ¡rio <span class="text-danger">*</span></label>
+									<label>Destinatário <span class="text-danger">*</span></label>
 									<select name="exDocumentoDTO.tipoDestinatario" onchange="javascript:sbmt();" class="form-control">
 										<c:forEach items="${exDocumentoDTO.listaTipoDest}" var="item">
 											<option value="${item.key}" ${item.key == exDocumentoDTO.tipoDestinatario ? 'selected' : ''}>${item.value}</option>
@@ -319,12 +319,12 @@
 						</div>
 					</c:if>
 
-					<!-- ClassificaÃ§Ã£o -->
+					<!-- Classificação -->
 					<div class="row">
 						<div class="col col-5">
 							<div class="form-group">
 								<input type="hidden" name="campos" value="classificacaoSel.id" />
-								<label>ClassificaÃ§Ã£o Documental <span class="text-danger">*</span></label>
+								<label>Classificação Documental <span class="text-danger">*</span></label>
 								<siga:span id="classificacao" depende="forma;modelo">
 									<siga:selecao modulo="sigaex" propriedade="classificacao" inputName="exDocumentoDTO.classificacao" urlAcao="buscar" urlSelecionar="selecionar" tema="simple" onchangeid="updateURL()" />
 								</siga:span>
@@ -335,7 +335,7 @@
 						<div class="row">
 							<div class="col-4">
 								<div class="form-group">
-									<label>DescriÃ§Ã£o da ClassificaÃ§Ã£o</label>
+									<label>Descrição da Classificação</label>
 									<siga:span id="descrClassifNovo" depende="forma;modelo;classificacao">
 										<input type="text" name="exDocumentoDTO.descrClassifNovo" size="80" value="${exDocumentoDTO.descrClassifNovo}" maxLength="4000" class="form-control" />
 									</siga:span>
@@ -412,9 +412,9 @@
 						<div class="row js-siga-sp-documento-analisa-alteracao">
 							<input type="hidden" name="campos" value="dtDocOriginalString" />
 							<input type="hidden" name="campos" value="numExtDoc" />
-							<div class="col-sm-2"><div class="form-group"><label>NÂº original</label><input type="text" name="exDocumentoDTO.numExtDoc" size="32" maxLength="32" value="${exDocumentoDTO.numExtDoc}" class="form-control" /></div></div>
+							<div class="col-sm-2"><div class="form-group"><label>Nº original</label><input type="text" name="exDocumentoDTO.numExtDoc" size="32" maxLength="32" value="${exDocumentoDTO.numExtDoc}" class="form-control" /></div></div>
 							<div class="col-sm-2"><div class="form-group"><label>Data</label><input type="text" name="exDocumentoDTO.dtDocOriginalString" size="10" onblur="javascript:verifica_data(this, true);" value="${exDocumentoDTO.dtDocOriginalString}" class="form-control" /></div></div>
-							<div class="col-sm-2"><div class="form-group"><input type="hidden" name="campos" value="numAntigoDoc" /><label>NÂº antigo</label><input type="text" name="exDocumentoDTO.numAntigoDoc" size="32" maxLength="34" value="${exDocumentoDTO.numAntigoDoc}" /></div></div>
+							<div class="col-sm-2"><div class="form-group"><input type="hidden" name="campos" value="numAntigoDoc" /><label>Nº antigo</label><input type="text" name="exDocumentoDTO.numAntigoDoc" size="32" maxLength="34" value="${exDocumentoDTO.numAntigoDoc}" /></div></div>
 						</div>
 						<div class="row js-siga-sp-documento-analisa-alteracao">
 							<div class="col-sm-2"><div class="form-group"><label>Emitente</label><select name="exDocumentoDTO.tipoEmitente" onchange="javascript:sbmt();" class="form-control"><c:forEach items="${exDocumentoDTO.listaTipoEmitente}" var="item"><option value="${item.key}" ${item.key == exDocumentoDTO.tipoEmitente ? 'selected' : ''}>${item.value}</option></c:forEach></select></div></div>
@@ -440,10 +440,10 @@
 						</c:if>
 					</c:if>
 
-					<!-- BOTÃ•ES -->
+					<!-- BOTÕES -->
 					<div class="row mt-4">
 						<div class="col-sm-8">
-							<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a EdiÃ§Ã£o">
+							<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição">
 								<i class="fas fa-save"></i> <u>G</u>ravar
 							</button>
 							&nbsp;
@@ -455,11 +455,11 @@
 								<i class="fas fa-file-alt"></i> <u>V</u>er Documento
 							</button>
 							&nbsp;
-							<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-secondary" accesskey="i" title="Visualizar versÃ£o para impressÃ£o (PDF)">
-								<i class="fas fa-print"></i> Ver <u>I</u>mpressÃ£o
+							<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-secondary" accesskey="i" title="Visualizar versão para impressão (PDF)">
+								<i class="fas fa-print"></i> Ver <u>I</u>mpressão
 							</button>
 							&nbsp;
-							<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-outline-dark" accesskey="r" title="Voltar Ã  pÃ¡gina anterior">
+							<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-outline-dark" accesskey="r" title="Voltar à página anterior">
 								<i class="fas fa-arrow-left"></i> Volta<u>r</u>
 							</button>
 						</div>
@@ -530,7 +530,7 @@
 		}
 	}
 
-		function obterRotuloCampo(campo) {
+	function obterRotuloCampo(campo) {
 		if (campo.id) {
 			var label = document.querySelector('label[for="' + campo.id + '"]');
 			if (label) return label.innerText.trim().replace(/\*/g, '').trim();
@@ -548,10 +548,10 @@
 		return campo.id || 'Campo';
 	}
 
-		function validarTodosCamposObrigatorios() {
+	function validarTodosCamposObrigatorios() {
 		var erros = [];
 		var form = document.getElementById('frm');
-		if (!form) return ['FormulÃ¡rio nÃ£o encontrado'];
+		if (!form) return ['Formulário não encontrado'];
 
 		var requiredFields = form.querySelectorAll('[required]');
 		for (var i = 0; i < requiredFields.length; i++) {
@@ -586,15 +586,15 @@
 		return erros;
 	}
 
-		function gravarDoc() {
-		// Sincroniza editores dinÃ¢micos (CKEditor, entrevista, etc.)
+	function gravarDoc() {
+		// Sincroniza editores dinâmicos (CKEditor, entrevista, etc.)
 		if (typeof sincronizarEditoresDinamicos === 'function') {
 			sincronizarEditoresDinamicos();
 		}
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = 'âŒ Os seguintes campos obrigatÃ³rios precisam ser preenchidos:\n\nâ€¢ ' + erros.join('\nâ€¢ ');
+			var msg = '❌ Os seguintes campos obrigatórios precisam ser preenchidos:\n\n• ' + erros.join('\n• ');
 			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
 				sigaModal.alerta(msg);
 			} else {
@@ -618,12 +618,15 @@
 			frm.action = 'gravar?redirect=listar';
 			frm.submit();
 		} else {
-			alert('Erro: formulÃ¡rio nÃ£o encontrado.');
+			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
+				sigaModal.alerta('Erro: formulário não encontrado.');
+			} else {
+				alert('Erro: formulário não encontrado.');
+			}
 		}
 	}
 
-		function gravarAssinarDoc() {
-		// REMOVEMOS QUALQUER EXIBIÃ‡ÃƒO DE MENSAGEM "PROCESSANDO"
+	function gravarAssinarDoc() {
 		if (typeof sigaSpinner !== 'undefined' && sigaSpinner.mostrar) sigaSpinner.mostrar();
 
 		if (typeof sincronizarEditoresDinamicos === 'function') {
@@ -632,7 +635,7 @@
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = 'âŒ Os seguintes campos obrigatÃ³rios precisam ser preenchidos antes de finalizar:\n\nâ€¢ ' + erros.join('\nâ€¢ ');
+			var msg = '❌ Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n• ' + erros.join('\n• ');
 			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
 				sigaModal.alerta(msg);
 			} else {
@@ -672,7 +675,11 @@
 		var winProp = 'width=' + popW + ',height=' + popH + ',left=' + winleft + ',top=' + winUp + ',scrollbars=yes,resizable';
 		var win = window.open('', 'doc', winProp);
 		if (!win) {
-			alert('Por favor, permita pop-ups para visualizar o documento.');
+			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
+				sigaModal.alerta('Por favor, permita pop-ups para visualizar o documento.');
+			} else {
+				alert('Por favor, permita pop-ups para visualizar o documento.');
+			}
 			return;
 		}
 		var t = frm.target;
