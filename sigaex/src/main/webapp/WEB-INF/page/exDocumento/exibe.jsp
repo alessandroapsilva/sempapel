@@ -48,7 +48,7 @@
             sessionStorage.removeItem('siglaParaAssinar');
             window.location.replace("/sigaex/app/expediente/mov/assinar?sigla=" + sigla);
         } else {
-            // Polling: tenta a cada 200ms por atÃ© 5 segundos
+            // Polling: tenta a cada 200ms por até 5 segundos
             var tentativas = 0;
             var maxTentativas = 25;
             var intervalo = setInterval(function() {
@@ -69,7 +69,7 @@
                     window.location.replace("/sigaex/app/expediente/mov/assinar?sigla=" + sigla2);
                 } else if (tentativas >= maxTentativas) {
                     clearInterval(intervalo);
-                    // Se nÃ£o conseguir, esconde o overlay e mostra o botÃ£o de fallback
+                    // Se não conseguir, esconde o overlay e mostra o botão de fallback
                     if (overlay) overlay.style.display = 'none';
                     var btnFallback = document.getElementById('btn-assinar-fallback');
                     if (btnFallback) btnFallback.style.display = 'inline-block';
@@ -297,9 +297,9 @@
 	var css = "<style>a:link {text-decoration: none}</style>";
 	$(css).appendTo("head");
 	function escapeAcentos(s) {
-		//Edson: o replace abaixo Ã© necessÃ¡rio porque o viz.js nÃ£o monta o grÃ¡fico corretamente se
+		//Edson: o replace abaixo é necessário porque o viz.js não monta o gráfico corretamente se
 		//houver caracteres com acento...
-		return s.replace(/[Ã£Ã¢Ã¡Ã ÃƒÃÃ€Ã‚ÃªÃ©ÃŠÃ‰Ã´ÃµÃ³Ã”Ã•Ã“ÃºÃšÃ§Ã‡]/gim, function(i) {
+		return s.replace(/[ãâáàÃÂÀÁêéÊÉôõóÔÕÓúÚçÇ]/gim, function(i) {
 			return '&#' + i.charCodeAt(0) + ';';
 		});
 	}
@@ -375,7 +375,7 @@
 		<div class="row mt-2">
 			<div class="col col-sm-12 col-md-8">
 				<div>
-					<c:if test="${f:podeUtilizarServicoPorConfiguracao(titular,lotaTitular,'SIGA:Sistema Integrado de GestÃ£o Administrativa;WF:MÃ³dulo de Workflow')}">
+					<c:if test="${f:podeUtilizarServicoPorConfiguracao(titular,lotaTitular,'SIGA:Sistema Integrado de Gestão Administrativa;WF:Módulo de Workflow')}">
 						<c:if
 							test="${ (primeiroMobil == true) and (docVO.tipoFormaDocumento == 'processo_administrativo')}">
 							<div id="${docVO.sigla}" depende=";wf;" class="wf_div"></div>
@@ -424,7 +424,7 @@
 							$(css).appendTo("head");
 						</script>
 						
-						<!-- Biblioteca select2: combobox com seleÃ§Ã£o multipla -->
+						<!-- Biblioteca select2: combobox com seleção multipla -->
 						<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 						<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 						<script src="/sigaex/javascript/filtroHistoricoDeMovimentacoes.js"></script>
@@ -439,14 +439,14 @@
         width: 100% !important; /* Ajustado para ocupar 100% */
     }
     
-    /* Estilo padrÃ£o para comboboxes */
+    /* Estilo padrão para comboboxes */
     select {
         width: 100%; /* Ajustado para ocupar 100% */
         height: 25px; /* altura fixa */
-        overflow: hidden; /* para evitar que o conteÃºdo se expanda verticalmente */
+        overflow: hidden; /* para evitar que o conteúdo se expanda verticalmente */
     }
     
-    /* Define tamanho padrÃ£o que se mantem mesmo que o js nÃ£o carregue */
+    /* Define tamanho padrão que se mantem mesmo que o js não carregue */
     .default-select {
         width: 100%; /* Ajustado para ocupar 100% */
         height: 25px;
@@ -458,14 +458,14 @@
     }
     
     .select-responsivo {
-        width: 100%; /* Define a largura para ocupar 100% do espaÃ§o do elemento pai */
+        width: 100%; /* Define a largura para ocupar 100% do espaço do elemento pai */
     }
 </style>
 
-<!-- Combobox Filtro por lotaÃ§Ãµes -->
+<!-- Combobox Filtro por lotações -->
 <div style="display: flex; flex-wrap: wrap; align-items: center;">
     <div class="col-12 col-md-4" style="flex: 1; min-width: 200px;"> <!-- Ajustado para flex: 1 -->
-        <label for="lotacaoSelect">LotaÃ§Ã£o:</label>
+        <label for="lotacaoSelect">Lotação:</label>
 
         <select id="lotacaoSelect" class="default-select" multiple="multiple">
             <c:forEach var="mov" items="${m.movs}">
@@ -476,9 +476,9 @@
         </select>
     </div>
     
-    <!-- Combobox Filtro por EspÃ©cie-->
+    <!-- Combobox Filtro por Espécie-->
     <div class="col-12 col-md-4" style="flex: 1; min-width: 200px;"> <!-- Ajustado para flex: 1 -->
-        <label for="especieSelect">EspÃ©cie:</label>
+        <label for="especieSelect">Espécie:</label>
         
         <select id="especieSelect" class="default-select" multiple="multiple">
         </select>
@@ -493,11 +493,11 @@
     </div>
     
     <div class="col-6 col-md-2" style="min-width: 100px;">
-        <!-- BotÃ£o Filtrar -->
+        <!-- Botão Filtrar -->
         <button onclick="applyFilter()" class="btn btn-info mr-3" id="filterButton" style="display: inline-block; margin-top: 10px;">Filtrar</button>
     </div>
     <div class="col-6 col-md-2" style="min-width: 100px;">
-        <!-- BotÃ£o Ver todos -->
+        <!-- Botão Ver todos -->
         <div class="col-12 col-md-1" style="min-width: 1%; display: flex; flex-wrap: wrap;">
             <button onclick="showAll()" class="btn btn-info mr-3" id="showAllButton" style="display:inline-block; margin-top: 10px;">Ver Todos</button>
         </div>
@@ -511,7 +511,7 @@
 										<th class="text-left">Data</th>
 										<th class="text-left"><fmt:message key="usuario.lotacao"/></th>
 										<th class="text-left">Evento</th>
-										<th class="text-left">DescriÃ§Ã£o</th>
+										<th class="text-left">Descrição</th>
 									</tr>
 								</thead>
 								<c:set var="evenorodd" value="odd" />
@@ -524,7 +524,7 @@
 											<td class="text-left" title="${mov.mov.cadastrante.descricao} - ${mov.mov.lotaCadastrante.descricao}">${mov.mov.lotaCadastrante.sigla}</td>
 											<td class="text-left" >${mov.mov.exTipoMovimentacao.descr}</td>
 											<td class="text-left" 
-													<c:if test="${mov.exTipoMovimentacao == 'ENCERRAMENTO_DE_VOLUME'}">data-toggle="tooltip"  data-placement="top" title="O sistema encerra automaticamente um volume apÃ³s a inclusÃ£o de ${f:resource('volume.max.paginas')} pÃ¡ginas para evitar lentidÃ£o no processamento e geraÃ§Ã£o de PDF."
+													<c:if test="${mov.exTipoMovimentacao == 'ENCERRAMENTO_DE_VOLUME'}">data-toggle="tooltip"  data-placement="top" title="O sistema encerra automaticamente um volume após a inclusão de ${f:resource('volume.max.paginas')} páginas para evitar lentidão no processamento e geração de PDF."
 													</c:if>>
 												${mov.descricao}
 												<c:if test="${mov.exTipoMovimentacao != 'ANEXACAO'}"> ${mov.complemento} </c:if>
@@ -566,7 +566,7 @@
 				<div class="gt-sidebar">
 					<c:if test="${m.pendencias}">
 						<div class="card-sidebar card bg-light mb-3" id="pendencias">
-							<tags:collapse title="PendÃªncias" id="Pendencias" collapseMode="${collapse_Expanded}">
+							<tags:collapse title="Pendências" id="Pendencias" collapseMode="${collapse_Expanded}">
 								<c:if test="${not empty m.pendenciasDeAnexacao}">
 									<p style="margin-bottom: 3px;">
 										<b style="color: rgb(195, 0, 0)">Anexos Pendentes:</b>
@@ -584,7 +584,7 @@
 								</c:if>
 								<c:if test="${not empty m.anexosNaoAssinados}">
 									<p style="margin-bottom: 3px;">
-										<b style="color: rgb(195, 0, 0)">Anexos nÃ£o assinados:</b>
+										<b style="color: rgb(195, 0, 0)">Anexos não assinados:</b>
 									</p>
 									<ul>
 										<c:forEach var="naoAssinado" items="${m.anexosNaoAssinados}">
@@ -599,7 +599,7 @@
 								</c:if>
 								<c:if test="${not empty m.despachosNaoAssinados}">
 									<p style="margin-bottom: 3px; margin-top: 8px;">
-										<b style="color: rgb(195, 0, 0)">Despachos nÃ£o assinados:</b>
+										<b style="color: rgb(195, 0, 0)">Despachos não assinados:</b>
 									</p>
 									<ul>
 										<c:forEach var="naoAssinado" items="${m.despachosNaoAssinados}">
@@ -613,7 +613,7 @@
 								</c:if>
 								<c:if test="${not empty m.expedientesJuntadosNaoAssinados}">
 									<p style="margin-bottom: 3px; margin-top: 8px;">
-										<b style="color: rgb(195, 0, 0)">Expedientes juntados nÃ£o
+										<b style="color: rgb(195, 0, 0)">Expedientes juntados não
 											assinados:</b>
 									</p>
 									<ul>
@@ -627,7 +627,7 @@
 								</c:if>
 								<c:if test="${not empty m.expedientesFilhosNaoJuntados}">
 									<p style="margin-bottom: 3px; margin-top: 8px;">
-										<b style="color: rgb(195, 0, 0)">Expedientes nÃ£o juntados:</b>
+										<b style="color: rgb(195, 0, 0)">Expedientes não juntados:</b>
 									</p>
 									<ul>
 										<c:forEach var="naoJuntado"
@@ -641,7 +641,7 @@
 								</c:if>
 								<c:if test="${not empty m.pendenciasDeColaboracao}">
 									<p style="margin-bottom: 3px;">
-										<b style="color: rgb(195, 0, 0)">PendÃªncias de ColaboraÃ§Ã£o:</b>
+										<b style="color: rgb(195, 0, 0)">Pendências de Colaboração:</b>
 									</p>
 									<ul>
 										<c:forEach var="colaboracaoPendente"
@@ -689,7 +689,7 @@
 						</div>
 					</c:if>
 
-					<!-- tabela de mÃ³biles e marcas -->
+					<!-- tabela de móbiles e marcas -->
 					<c:if test="${not empty docVO.outrosMobsLabel and not empty docVO.marcasDeSistemaPorMobil}">
 						<div class="card-sidebar card bg-light mb-3">
 							<c:set var="butRefresh"><a title="Atualizar marcas"
@@ -702,15 +702,6 @@
 							<tags:collapse title="${docVO.outrosMobsLabel}" id="OutrosMob" collapseMode="${collapse_Expanded}" addToTitle="${butRefresh}" classInfo="m-0 p-0">
 								<div class="table-responsive">
 								<table class="table table-sm mb-0 w-100">
-								<!-- <thead class="align-middle text-center">
-									<tr>
-										<th class="text-left"></th>
-										<th class="text-left">Marca</th>
-										<th class="text-left"><fmt:message key="usuario.pessoa"/></th>
-										<th class="text-left"><fmt:message key="usuario.lotacao"/></th>
-										<th class="text-left">Texto</th>
-									</tr>
-								</thead> -->
 								<tbody>
 									<c:forEach var="entry" items="${docVO.marcasDeSistemaPorMobil}">
 										<c:set var="outroMob" value="${entry.key}" />
@@ -798,7 +789,7 @@
 													<c:if test="${empty pessoaAtual}">
 														<siga:selecionado 
 															isVraptor="true" 
-															sigla="${marca.exMovimentacao.lotaSubscritor.sigla} (Sem acesso ao documento - A marca nÃ£o serÃ¡ mostrada)"
+															sigla="${marca.exMovimentacao.lotaSubscritor.sigla} (Sem acesso ao documento - A marca não será mostrada)"
 															descricao="${marca.exMovimentacao.lotaSubscritor.descricaoAmpliada}"
 															lotacaoParam="${marca.exMovimentacao.lotaSubscritor.siglaCompleta}" />
 													</c:if>												
@@ -816,7 +807,7 @@
 										</c:choose>
 										<c:choose>
 											<c:when test="${marca.exMovimentacao.podeCancelar(titular, lotaTitular)}">
-												<td style="padding-left:.25em; padding-right: 0"><a href="javascript:postToUrl('/sigaex/app/expediente/mov/cancelar_movimentacao_gravar?id=${marca.exMovimentacao.idMov}&sigla=${marca.exMovimentacao.exMobil.sigla}&descrMov=' + encodeURIComponent('ExclusÃ£o de marcador: ${marca.cpMarcador.descrMarcador}'))" 
+												<td style="padding-left:.25em; padding-right: 0"><a href="javascript:postToUrl('/sigaex/app/expediente/mov/cancelar_movimentacao_gravar?id=${marca.exMovimentacao.idMov}&sigla=${marca.exMovimentacao.exMobil.sigla}&descrMov=' + encodeURIComponent('Exclusão de marcador: ${marca.cpMarcador.descrMarcador}'))" 
 													title="${exibirExplicacao ? marca.exMovimentacao.expliquePodeCancelar(titular, lotaTitular) : ''}"><i class="far fa-trash-alt"></i></a></td>
 											</c:when>
 											<c:otherwise>
@@ -833,11 +824,11 @@
 						</div>
 					</c:if>
 
-					<!-- InÃ­cio mapa colaboraÃ§Ã£o -->
+					<!-- Início mapa colaboração -->
 					<c:if test="${docVO.dotColaboracao.numNodos > 1}">
 						<!-- Sidebar List -->
 						<div class="card-sidebar card bg-light mb-3">
-							<tags:collapse title="ColaboraÃ§Ã£o" id="Colaboracao" collapseMode="${collapse_Expanded}">
+							<tags:collapse title="Colaboração" id="Colaboracao" collapseMode="${collapse_Expanded}">
 								<div style="display: none" id="inputColaboracao"></div>
 								<a href="javascript:void(0)" href="javascript:void(0)"
 									style="text-decoration: none">
@@ -875,7 +866,7 @@
 							function bigmapColaboracao() {
 								$('#svgColaboracao').dialog('open');
 								if ($('#naoCarregouBigColaboracao')[0] != undefined){
-									var input = 'digraph G { graph[tooltip="ColaboraÃ§Ã£o"] ${docVO.dotColaboracao} }';
+									var input = 'digraph G { graph[tooltip="Colaboração"] ${docVO.dotColaboracao} }';
 									input = escapeAcentos(input);
 									buildSvg('output2Colaboracao', input, updateContainerColaboracao);
 								}
@@ -904,7 +895,7 @@
 							function smallmapColaboracao() {
 								//$("#outputColaboracao").css("background-color", $("html").css("background-color"));
 								var bgcolor = rgb2hex($("#outputColaboracao").css("background-color"));
-								var input = 'digraph G { graph[tooltip="ColaboraÃ§Ã£o" ratio="' + ratioColaboracao() + '"  color="'+ bgcolor +'" bgcolor="'+bgcolor+'" URL="javascript: bigmapColaboracao();"]; node[fillcolor=white fontsize=50 style=filled ]; edge[fontsize=30]; ${docVO.dotColaboracao} }';
+								var input = 'digraph G { graph[tooltip="Colaboração" ratio="' + ratioColaboracao() + '"  color="'+ bgcolor +'" bgcolor="'+bgcolor+'" URL="javascript: bigmapColaboracao();"]; node[fillcolor=white fontsize=50 style=filled ]; edge[fontsize=30]; ${docVO.dotColaboracao} }';
 								input = escapeAcentos(input);
 								buildSvg('outputColaboracao', input, updateContainerColaboracao);
 							}
@@ -936,11 +927,11 @@
 							}
 							smallmapColaboracao();
 					    </script>
-						<!-- Fim mapa colaboraÃ§Ã£o -->
+						<!-- Fim mapa colaboração -->
 					</c:if>
 
 
-					<!-- InÃ­cio mapa relaÃ§Ã£o entre documentos -->
+					<!-- Início mapa relação entre documentos -->
 					<c:if test="${docVO.dotRelacaoDocs.numNodos > 1}">
 						<!-- Sidebar List -->
 						<div class="card-sidebar card bg-light mb-3">
@@ -1063,16 +1054,16 @@
 							smallmapRelacaoDocs();
 						</script>
 					</c:if>
-					<!-- Fim mapa relaÃ§Ã£o entre documentos -->
+					<!-- Fim mapa relação entre documentos -->
 
 
 					<c:if test="${docVO.dotTramitacao.numNodos > 1}">
-						<!-- InÃ­cio mapa tramitaÃ§Ã£o -->
+						<!-- Início mapa tramitação -->
 
 						<!-- Sidebar List -->
 						
 						<div class="card-sidebar card bg-light mb-3">
-							<tags:collapse title="TramitaÃ§Ã£o" id="Tramitacao" collapseMode="${collapse_Tramitacao}">
+							<tags:collapse title="Tramitação" id="Tramitacao" collapseMode="${collapse_Tramitacao}">
 								<div style="display: none" id="inputTramitacao"></div>
 								<a href="javascript:void(0)" href="javascript:void(0)"
 									style="text-decoration: none">
@@ -1114,7 +1105,7 @@
 									function bigmapTramitacao() {
 										$('#svgTramitacao').dialog('open');
 										if ($('#naoCarregouBigTramitacao')[0] != undefined){
-											var input = 'digraph G { graph[tooltip="TramitaÃ§Ã£o"] ${docVO.dotTramitacao} }';
+											var input = 'digraph G { graph[tooltip="Tramitação"] ${docVO.dotTramitacao} }';
 											input = escapeAcentos(input);
 											buildSvg('output2Tramitacao', input, updateContainerTramitacao);
 										}
@@ -1143,7 +1134,7 @@
 									function smallmapTramitacao() {
 										//$("#outputTramitacao").css("background-color", $("html").css("background-color"));
 										var bgcolor = rgb2hex($("#outputTramitacao").css("background-color"));
-										var input = 'digraph G { graph[tooltip="TramitaÃ§Ã£o" ratio="' + ratioTramitacao() + '"  color="'+ bgcolor +'" bgcolor="'+bgcolor+'" URL="javascript: bigmapTramitacao();"]; node[fillcolor=white fontsize=50 style=filled ]; edge[fontsize=30]; ${docVO.dotTramitacao} }';
+										var input = 'digraph G { graph[tooltip="Tramitação" ratio="' + ratioTramitacao() + '"  color="'+ bgcolor +'" bgcolor="'+bgcolor+'" URL="javascript: bigmapTramitacao();"]; node[fillcolor=white fontsize=50 style=filled ]; edge[fontsize=30]; ${docVO.dotTramitacao} }';
 										input = escapeAcentos(input);
 										buildSvg('outputTramitacao', input, updateContainerTramitacao);
 									}
@@ -1177,7 +1168,7 @@
 							    </script>
 							</tags:collapse>
 						</div>
-						<!-- Fim mapa tramitaÃ§Ã£o -->
+						<!-- Fim mapa tramitação -->
 					</c:if>
 
 					<div class="card-sidebar card bg-light mb-3">
@@ -1201,7 +1192,7 @@
 							</p>
 							<c:if test="${not empty docVO.originalNumero}">
 								<p>
-									<b>NÃºmero original:</b> ${docVO.originalNumero}
+									<b>Número original:</b> ${docVO.originalNumero}
 								</p>
 							</c:if>
 							<p class="${hide_only_GOVSP}">
@@ -1215,13 +1206,13 @@
 								${docVO.lotaCadastranteString}
 							</p>
 							<p class="${hide_only_GOVSP}">
-								<b>EspÃ©cie:</b> ${docVO.forma}
+								<b>Espécie:</b> ${docVO.forma}
 							</p>
 							<p>
 								<b>Modelo:</b> ${docVO.modelo}
 							</p>
 							<p id="descricao">
-								<b>DescriÃ§Ã£o:</b> ${docVO.descrDocumento}
+								<b>Descrição:</b> ${docVO.descrDocumento}
 							</p>
 							<script language="javascript">
                     function parseDescricao(id){
@@ -1246,7 +1237,7 @@
                     parseDescricao('descricao');
            		 </script>
 							<p>
-								<b>ClassificaÃ§Ã£o:</b> ${docVO.classificacaoDescricaoCompleta}
+								<b>Classificação:</b> ${docVO.classificacaoDescricaoCompleta}
 							</p>
 							
 							<c:if test="${not empty docVO.tipoDePrincipal and not empty docVO.principal}">
@@ -1262,7 +1253,7 @@
 
 					<c:if test="${not empty descrCiencia}">
 						<div class="card-sidebar card bg-light mb-3 ${hide_only_TRF2}">
-							<tags:collapse title="CiÃªncia" id="Ciencia" collapseMode="${collapse_Expanded}">
+							<tags:collapse title="Ciência" id="Ciencia" collapseMode="${collapse_Expanded}">
 								<p>${descrCiencia}</p>
 							</tags:collapse>
 						</div>
@@ -1270,7 +1261,7 @@
 
 					<c:if test="${not empty m.getDescricaoCompletaEMarcadoresEmHtml(cadastrante,lotaTitular)}">
 						<div class="card-sidebar card bg-light mb-3 ${hide_only_TRF2}">
-							<tags:collapse title="SituaÃ§Ã£o do Documento" id="SituacaoDoc" collapseMode="${collapse_Expanded}">
+							<tags:collapse title="Situação do Documento" id="SituacaoDoc" collapseMode="${collapse_Expanded}">
 								<p class="font-weight-bold">
 									${m.getDescricaoCompletaEMarcadoresEmHtml(cadastrante,lotaTitular)}
 									<c:if test="${docVO.digital and not empty m.tamanhoDeArquivo}">
@@ -1298,12 +1289,12 @@
 									</button>
 								</c:set>
 							</c:if>
-							<tags:collapse title="CossignatÃ¡rios" id="CossignatÃ¡rios" collapseMode="${collapse_Expanded}" addToTitle="${butOrdemAssinatura}">
+							<tags:collapse title="Cossignatários" id="Cossignatários" collapseMode="${collapse_Expanded}" addToTitle="${butOrdemAssinatura}">
 
 
 								<c:if test="${podeReordenar}">
 								<div class="menu-ordenacao  pb-2" style="text-align: center;height: auto;max-height: 0;opacity: 0;position: relative;left: -999px;transition: left .3s, opacity .3s, max-height .5s;">
-									Clique e arraste os itens tracejados para reordenÃ¡-los<br />							
+									Clique e arraste os itens tracejados para reordená-los<br />							
 									<form action="${pageContext.request.contextPath}/app/expediente/doc/reordenarAss" id="formReordenarAss" class="form" method="POST">									
 										<input type="hidden" name="ids" id="inputHiddenIds" />													
 										<input type="hidden" name="sigla" value="${sigla}" />
@@ -1381,7 +1372,7 @@
 
 
 					<div class="card-sidebar card bg-light mb-3" >
-						<tags:collapse title="NÃ­vel de Acesso" id="NivelAcesso" collapseMode="${collapse_NivelAcesso}">
+						<tags:collapse title="Nível de Acesso" id="NivelAcesso" collapseMode="${collapse_NivelAcesso}">
 							<p>
 								<b>${docVO.nmNivelAcesso}</b>
 								<c:if test="${not empty docVO.listaDeAcessos}">
@@ -1391,7 +1382,7 @@
 												varStatus="loop">
 												<c:choose>
 													<c:when test="${acesso eq 'PUBLICO'}">
-										(PÃºblico)
+										(Público)
 									</c:when>
 													<c:otherwise>
 										(${acesso.sigla} - ${acesso.descricao})
@@ -1427,9 +1418,9 @@
 							<div class="container-confirmacao-cancelar-arquivo">
 								<div class="confirmacao-cancelar-arquivo">
 									<h1>Confirma cancelamento do arquivo?</h1>
-									<p class="descricao-arquivo-confirmacao">descriÃ§Ã£o do arquivo</p>															
+									<p class="descricao-arquivo-confirmacao">descrição do arquivo</p>															
 									<button type="button" class="btn btn-sm btn-success btn-cancelar-arquivo-nao">																
-										NÃ£o
+										Não
 									</button>
 									<button type="button" class="btn btn-sm btn-danger btn-cancelar-arquivo-sim">																
 										Sim
@@ -1528,7 +1519,7 @@
 			</div>
 		</div>
 	</div>
-	<p style="font-weight: bold">Clique sobre a imagem com o botÃ£o
+	<p style="font-weight: bold">Clique sobre a imagem com o botão
 		esquerdo para ampliar ou com o direito para reduzir.</p>
 	<a href="javascript:void(0)"
 		onclick="javascript: $('#svgColaboracao').dialog('close');"
@@ -1547,7 +1538,7 @@
 			</div>
 		</div>
 	</div>
-	<p style="font-weight: bold">Clique sobre a imagem com o botÃ£o
+	<p style="font-weight: bold">Clique sobre a imagem com o botão
 		esquerdo para ampliar ou com o direito para reduzir.</p>
 	<a href="javascript:void(0)"
 		onclick="javascript: $('#svgRelacaoDocs').dialog('close');"
@@ -1564,14 +1555,14 @@
 			</div>
 		</div>
 	</div>
-	<p style="font-weight: bold">Clique sobre a imagem com o botÃ£o
+	<p style="font-weight: bold">Clique sobre a imagem com o botão
 		esquerdo para ampliar ou com o direito para reduzir.</p>
 	<a href="javascript:void(0)"
 		onclick="javascript: $('#svgTramitacao').dialog('close');"
 		class="gt-btn-large gt-btn-left">Voltar</a>
 </div>
 
-<c:if test="${f:resource('/sigawf.ativo') and f:podeUtilizarServicoPorConfiguracao(titular,lotaTitular,'SIGA:Sistema Integrado de GestÃ£o Administrativa;WF:MÃ³dulo de Workflow')}">
+<c:if test="${f:resource('/sigawf.ativo') and f:podeUtilizarServicoPorConfiguracao(titular,lotaTitular,'SIGA:Sistema Integrado de Gestão Administrativa;WF:Módulo de Workflow')}">
 	<script type="text/javascript">
 		<c:if test="${ (docVO.tipoFormaDocumento == 'processo_administrativo')}">
 			var url = "/sigawf/app/doc?sigla=${docVO.mob.sigla}&ts=1${currentTimeMillis}";
@@ -1585,7 +1576,7 @@
             type: "GET"
         }).fail(function(jqXHR, textStatus, errorThrown){
 			var div = $(".wf_div:last");
-			$(div).html('<p class="erro">Houve um problema ao verificar se hÃ¡ fluxos do SIGA-WF associados a este documento. Favor atualizar a pÃ¡gina para tentar novamente.</p>');
+			$(div).html('<p class="erro">Houve um problema ao verificar se há fluxos do SIGA-WF associados a este documento. Favor atualizar a página para tentar novamente.</p>');
         }).done(function(data, textStatus, jqXHR ){
 			var div = $(".wf_div:last");
 			$(div).html(data);
@@ -1682,7 +1673,7 @@
 	      <div class="modal-body text-center">Deseja receber o documento?</div>
 	      <div class="modal-footer text-center">
 	      	<div class="row" style="margin: 0 auto;">
-		        <button id="button_receber_cancel" type="button" class="btn btn-secondary" data-dismiss="modal">NÃ£o</button>		        	       
+		        <button id="button_receber_cancel" type="button" class="btn btn-secondary" data-dismiss="modal">Não</button>		        	       
 	        	<a href="${linkTo[ExMovimentacaoController].aReceber()}?sigla=${docVO.mob.sigla}" onclick="sigaSpinner.mostrar();" 
 	        		class="btn btn-primary btn-acao" role="button" aria-pressed="true" style="margin-left: .5rem;">Sim</a>		        
 		    </div>    
@@ -1718,21 +1709,21 @@
 	<c:choose>
 		<c:when test="${podeExibirTodosOsVolumes }">
 			<siga:siga-modal id="modalDeConfirmacaoArqCorrente" exibirRodape="true" 
-					tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>AtenÃ§Ã£o</b></label>"
-					descricaoBotaoFechaModalDoRodape="NÃ£o" descricaoBotaoDeAcao="Sim" 
+					tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>Atenção</b></label>"
+					descricaoBotaoFechaModalDoRodape="Não" descricaoBotaoDeAcao="Sim" 
 					linkBotaoDeAcao="${linkTo[ExMovimentacaoController].aArquivarCorrenteGravar()}?sigla=${docVO.sigla}">
 				<div class="modal-body">
-		       		 Verifique se hÃ¡ necessidade de incluir o Termo de Encerramento para este documento. Deseja continuar com o arquivamento?
+		       		 Verifique se há necessidade de incluir o Termo de Encerramento para este documento. Deseja continuar com o arquivamento?
 		     	</div>	     	
 			</siga:siga-modal>	
 		</c:when>
 		<c:otherwise>
 			<siga:siga-modal id="modalDeConfirmacaoArqCorrente" exibirRodape="true" 
-					tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>AtenÃ§Ã£o</b></label>"
-					descricaoBotaoFechaModalDoRodape="NÃ£o" descricaoBotaoDeAcao="Sim" 
+					tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>Atenção</b></label>"
+					descricaoBotaoFechaModalDoRodape="Não" descricaoBotaoDeAcao="Sim" 
 					linkBotaoDeAcao="${linkTo[ExMovimentacaoController].aArquivarCorrenteGravar()}?sigla=${mob.sigla}">
 				<div class="modal-body">
-		       		 Verifique se hÃ¡ necessidade de incluir o Termo de Encerramento para este documento. Deseja continuar com o arquivamento?
+		       		 Verifique se há necessidade de incluir o Termo de Encerramento para este documento. Deseja continuar com o arquivamento?
 		     	</div>	     	
 			</siga:siga-modal>			
 		</c:otherwise>
@@ -1748,19 +1739,19 @@
 </c:if>
 <c:if test="${mob.isJuntado()}">			
 	<siga:siga-modal id="modalDeAvisoTornarDocumentoSemEfeito" exibirRodape="true" 
-		tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>AtenÃ§Ã£o</b></label>"
+		tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>Atenção</b></label>"
 		descricaoBotaoFechaModalDoRodape="Ok">
 		<div class="modal-body">
-       		Ã‰ necessÃ¡rio desentranhar o documento para realizar o seu cancelamento.
+       		É necessário desentranhar o documento para realizar o seu cancelamento.
      	</div>	     	
 	</siga:siga-modal>
 	
 	<c:if test="${mob.mobilPrincipal.isSobrestado() && mob.mobilPrincipal.doc.isComposto()}">
 		<siga:siga-modal id="modalDeAvisoDesentranhar" exibirRodape="true" 
-			tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>AtenÃ§Ã£o</b></label>"
+			tituloADireita="<i class='fas fa-exclamation-circle' style='font-size: 1.5em; color: #ffc107;'></i> <label style='font-size: 1.1em;vertical-align: middle;'><b>Atenção</b></label>"
 			descricaoBotaoFechaModalDoRodape="Ok">
 			<div class="modal-body">
-	       		NÃ£o Ã© possÃ­vel fazer o desentranhamento porque o documento ao qual este estÃ¡ juntado encontra-se sobrestado.
+	       		Não é possível fazer o desentranhamento porque o documento ao qual este está juntado encontra-se sobrestado.
 	     	</div>	     	
 		</siga:siga-modal>
 		<script>
@@ -1842,18 +1833,18 @@
 document.getElementById('tramitar').onclick = function() {
 	    var div = document.getElementById('quadro_destaque_tem_workflow_associado');
 	    
-	    // Verificar se a div existe e estÃ¡ visÃ­vel para saber se o documento tem um workflow associado
+	    // Verificar se a div existe e está visível para saber se o documento tem um workflow associado
 	    if (div && div.offsetWidth > 0 && div.offsetHeight > 0) {
-	        return confirm('Este documento estÃ¡ atualmente tramitando por um workflow. Tramitar manualmente pode resultar em inconsistÃªncias no processo. VocÃª tem certeza que deseja prosseguir com o trÃ¢mite manual?');
+	        return confirm('Este documento está atualmente tramitando por um workflow. Tramitar manualmente pode resultar em inconsistências no processo. Você tem certeza que deseja prosseguir com o trâmite manual?');
 	    }
 	}
 	
 document.getElementById('tramitar-em-paralelo').onclick = function() {
     var div = document.getElementById('quadro_destaque_tem_workflow_associado');
     
-    // Verificar se a div existe e estÃ¡ visÃ­vel para saber se o documento tem um workflow associado
+    // Verificar se a div existe e está visível para saber se o documento tem um workflow associado
     if (div && div.offsetWidth > 0 && div.offsetHeight > 0) {
-        return confirm('Este documento estÃ¡ atualmente tramitando por um workflow. Tramitar manualmente pode resultar em inconsistÃªncias no processo. VocÃª tem certeza que deseja prosseguir com o trÃ¢mite manual?');
+        return confirm('Este documento está atualmente tramitando por um workflow. Tramitar manualmente pode resultar em inconsistências no processo. Você tem certeza que deseja prosseguir com o trâmite manual?');
     }
 }
 
@@ -1861,7 +1852,7 @@ document.getElementById('incluir-documento').onclick = function() {
     var div = document.getElementById('quadro_destaque_tem_workflow_associado');
     if (tipoDeTarefa == "CRIAR_DOCUMENTO"){
     	if (div && div.offsetWidth > 0 && div.offsetHeight > 0) {
-        	return confirm('JÃ¡ existe uma minuta de documento gerada automaticamente pelo sistema, que pode ser editada pelo usuÃ¡rio, se necessÃ¡rio. VocÃª realmente deseja prosseguir com a inclusÃ£o de um novo documento?');
+        	return confirm('Já existe uma minuta de documento gerada automaticamente pelo sistema, que pode ser editada pelo usuário, se necessário. Você realmente deseja prosseguir com a inclusão de um novo documento?');
     	}
     }
 }
