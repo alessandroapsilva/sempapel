@@ -4,8 +4,14 @@
 	<deployment>
 		<module-alias name="deployment.sigaex" />
 		<exclusions>
+			<!-- Exclusões originais -->
 			<module name="org.apache.xalan" />
 			<module name="org.apache.logging.log4j.api" />
+			
+			<!-- + CORREÇÃO ADICIONADA: Bloqueia o conflito do Jackson no JBoss -->
+			<module name="com.fasterxml.jackson.core.jackson-core" />
+			<module name="com.fasterxml.jackson.core.jackson-databind" />
+			<module name="com.fasterxml.jackson.core.jackson-annotations" />
 		</exclusions>
 		
 		<dependencies>
@@ -25,6 +31,4 @@
 		</dependencies>
 
 	</deployment>
-
-
 </jboss-deployment-structure>
