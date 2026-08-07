@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.aryjr.nheengatu.pdf.HTML2PDFParser;
 import com.aryjr.nheengatu.pdf.PDFDocument;
@@ -39,33 +41,33 @@ public class Nheengatu implements ConversorHtml {
 	public byte[] converter(String sHtml, byte output) throws Exception {
 		// TODO Auto-generated method stub
 		try (ByteArrayOutputStream bo = new ByteArrayOutputStream()) {
-		parser.parse(new ByteArrayInputStream(sHtml.getBytes("utf-8")),
-				extract(sHtml, "<!-- INICIO PRIMEIRO CABECALHO",
-						"FIM PRIMEIRO CABECALHO -->"), extract(sHtml,
-						"<!-- INICIO PRIMEIRO RODAPE",
-						"FIM PRIMEIRO RODAPE -->"), extract(sHtml,
-						"<!-- INICIO CABECALHO", "FIM CABECALHO -->"), extract(
-						sHtml, "<!-- INICIO RODAPE", "FIM RODAPE -->"));
+			
+			// ==============================================================
+			// CORREÇÃO ADICIONADA: SUBSTITUIÇÃO DAS VARIÁVEIS DE DATA/HORA E NOME
+			// ==============================================================
+			SimpleDateFormat sdfData = new SimpleDateFormat("dd/MM/yyyy");
+			SimpleDateFormat sdfHora = new SimpleDateFormat("HH:mm");
+			Date agora = new Date();
 
-		
-		
-		final PDFDocument pdf = parser.getPdf();
-		// pdf.generateFile(response.getOutputStream());
+			// Substitui as variáveis no HTML pelos valores reais antes de gerar o PDF
+			sHtml = sHtml.replace("@dtAssinatura@", sdfData.format(agora));
+			sHtml = sHtml.replace("@hrAssinatura@", sdfHora.format(agora));
+			sHtml = sHtml.replace("@nomePessoa@", "Assinante"); // Substitui o nome se não tiver acesso ao objeto
+			// ==============================================================
 
-//		System.out.println("Processamento: terminou nheengatu extract cabecalhos");
-		
-		pdf.generateFile(bo);
+			parser.parse(new ByteArrayInputStream(sHtml.getBytes("utf-8")),
+					extract(sHtml, "<!-- INICIO PRIMEIRO CABECALHO",
+							"FIM PRIMEIRO CABECALHO -->"), extract(sHtml,
+							"<!-- INICIO PRIMEIRO RODAPE",
+							"FIM PRIMEIRO RODAPE -->"), extract(sHtml,
+							"<!-- INICIO CABECALHO", "FIM CABECALHO -->"), extract(
+							sHtml, "<!-- INICIO RODAPE", "FIM RODAPE -->"));
 
-//		System.out.println("Processamento: terminou nheengatu generate file");
-		
-		// System.out.println(System.currentTimeMillis() + " - FIM
-		// generatePdf");
-		return bo.toByteArray();
-		} catch(Throwable t){
-//			System.out.println("Processamento: stacktrace nheengatu.converter");
-//			System.out.println("mensagem::::" + t.getMessage());
-//			System.out.println("causa::::" + t.getCause());
-//			t.printStackTrace();
+			final PDFDocument pdf = parser.getPdf();
+			pdf.generateFile(bo);
+
+			return bo.toByteArray();
+		} catch (Throwable t) {
 			throw new Exception(t);
 		}
 	}
@@ -78,5 +80,4 @@ public class Nheengatu implements ConversorHtml {
 			return null;
 		return new ByteArrayInputStream(sResult.getBytes("utf-8"));
 	}
-
 }
