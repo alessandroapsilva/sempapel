@@ -4479,9 +4479,8 @@ public class ExBL extends CpBL {
 					final Object[] aMovimentacao = set.toArray();
 					for (int i = 0; i < set.size(); i++) {
 						final ExMovimentacao movimentacao = (ExMovimentacao) aMovimentacao[i];
-						if (!movimentacao.isCancelada())
-							Ex.getInstance().getBL().excluirMovimentacao(titular, lotaTitular, movimentacao.getExMobil(),
-									movimentacao.getIdMov());
+						Ex.getInstance().getBL().excluirMovimentacao(titular, lotaTitular, movimentacao.getExMobil(),
+								movimentacao.getIdMov());
 					}
 				}
 
@@ -4782,7 +4781,7 @@ public class ExBL extends CpBL {
 
 	}
 
-	public void alterarPrincipal(final DpPessoa cadastrante, final DpPessoa docTitular, final DpLotacao lotaCadastrante,
+	public void alterarPrincipal(final DpPessoa cadastrante, final DpLotacao lotaCadastrante,
 			final String idDocExterno, final ExMobil mob, ExMobil mobPai, final Date dtMov, final DpPessoa subscritor,
 			final DpPessoa titular, final String idDocEscolha) {
 
@@ -6229,6 +6228,18 @@ public class ExBL extends CpBL {
 					throw new RuntimeException("Erro no processamento do modelo HTML.", e);
 				}
 
+                // --- INICIO DA CORREÇÃO ---
+                java.text.SimpleDateFormat sdfData = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                java.text.SimpleDateFormat sdfHora = new java.text.SimpleDateFormat("HH:mm");
+                java.util.Date agora = new java.util.Date();
+                String dataAtual = sdfData.format(agora);
+                String horaAtual = sdfHora.format(agora);
+                String nomeAssinante = doc.getSubscritor() != null ? doc.getSubscritor().getNomePessoa() : "Assinante";
+                strHtml = strHtml.replace("@dtAssinatura@", dataAtual);
+                strHtml = strHtml.replace("@hrAssinatura@", horaAtual);
+                strHtml = strHtml.replace("@nomePessoa@", nomeAssinante);
+                // --- FIM DA CORREÇÃO ---
+
 				// Restaurar o modelo do "Interno Antigo"
 				if (doc.getExTipoDocumento().getIdTpDoc() == ExTipoDocumento.TIPO_DOCUMENTO_INTERNO_FOLHA_DE_ROSTO) {
 					if (backupID != null) {
@@ -7095,7 +7106,6 @@ public class ExBL extends CpBL {
 			mov.setDescrMov(descrMov);
 
 			gravarMovimentacao(mov);
-
 			concluirAlteracao(mov);
 		} catch (final Exception e) {
 			cancelarAlteracao();
@@ -7180,9 +7190,8 @@ public class ExBL extends CpBL {
 
 	}
 
-	public void apensarDocumento(final DpPessoa cadastrante, final DpPessoa docTitular, final DpLotacao lotaCadastrante,
-			final ExMobil mob, final ExMobil mobMestre, final Date dtMov, final DpPessoa subscritor,
-			final DpPessoa titular) {
+	public void apensarDocumento(final DpPessoa cadastrante, final DpLotacao lotaCadastrante, final ExMobil mob,
+			final ExMobil mobMestre, final Date dtMov, final DpPessoa subscritor, final DpPessoa titular) {
 
 		if (mobMestre == null)
 			throw new AplicacaoException("não foi selecionado um documento para a apensação");
@@ -9173,4 +9182,3 @@ public class ExBL extends CpBL {
 				.restringirAcesso(cadastrante, lotaCadastrante, documento, null, null, null, listaPessoasRestricaoAcesso, null, null, nivelAcesso);
 	}
 }
-
