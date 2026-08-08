@@ -590,17 +590,17 @@
 			}
 		}
 
-		// 2. Campos com classe 'obrigatorio' ou 'required' (muitos campos do SIGA usam classe)
-		var classFields = form.querySelectorAll('.obrigatorio, .required, [data-obrigatorio="true"]');
-		for (var k = 0; k < classFields.length; k++) {
-			var campo = classFields[k];
+		// 2. Campos do modelo com data-obrigatorio ou classe obrigatorio
+		var camposModelo = form.querySelectorAll('[data-obrigatorio="true"], .obrigatorio, .required');
+		for (var k = 0; k < camposModelo.length; k++) {
+			var campo = camposModelo[k];
 			if (campo.offsetParent === null || campo.style.display === 'none' || campo.disabled) continue;
-			// Evita duplicar os já capturados com required
+			// Evita duplicar os já capturados
 			if (campo.hasAttribute('required')) continue;
 			var valorCampo = campo.value;
 			var rotuloCampo = obterRotuloCampo(campo) || 'Campo do modelo';
 			if (campo.tagName === 'SELECT') {
-				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]' || valorCampo === 'Selecione...') {
+				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]') {
 					erros.push(rotuloCampo);
 				}
 			} else if (campo.type === 'checkbox' || campo.type === 'radio') {
@@ -672,6 +672,8 @@
 		}
 
 		var erros = validarTodosCamposObrigatorios();
+		console.log('Erros (gravar):', erros.length, erros);
+
 		if (erros.length > 0) {
 			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos:\n\n• ' + erros.join('\n• ');
 			exibirModalErro(msg);
@@ -705,6 +707,8 @@
 		}
 
 		var erros = validarTodosCamposObrigatorios();
+		console.log('Erros (finalizar):', erros.length, erros);
+
 		if (erros.length > 0) {
 			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n• ' + erros.join('\n• ');
 			exibirModalErro(msg);
