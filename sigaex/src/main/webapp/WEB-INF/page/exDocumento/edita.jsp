@@ -636,6 +636,8 @@
 		var modalExistente = document.getElementById(modalId);
 		if (modalExistente) modalExistente.remove();
 
+		// CORREÇÃO: substitui as quebras de linha em JavaScript puro
+		var mensagemHtml = mensagem.replace(/\n/g, '<br>');
 		var modalHtml = `
 			<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
 				<div class="modal-dialog" role="document">
@@ -647,7 +649,7 @@
 							</button>
 						</div>
 						<div class="modal-body">
-							${mensagem.replace(/\n/g, '<br>')}
+							${mensagemHtml}
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
