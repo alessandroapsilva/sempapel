@@ -590,15 +590,17 @@
 			}
 		}
 
-		// 2. Campos do modelo com data-obrigatorio
-		var camposModelo = form.querySelectorAll('[data-obrigatorio="true"]');
-		for (var k = 0; k < camposModelo.length; k++) {
-			var campo = camposModelo[k];
+		// 2. Campos com classe 'obrigatorio' ou 'required' (muitos campos do SIGA usam classe)
+		var classFields = form.querySelectorAll('.obrigatorio, .required, [data-obrigatorio="true"]');
+		for (var k = 0; k < classFields.length; k++) {
+			var campo = classFields[k];
 			if (campo.offsetParent === null || campo.style.display === 'none' || campo.disabled) continue;
+			// Evita duplicar os já capturados com required
+			if (campo.hasAttribute('required')) continue;
 			var valorCampo = campo.value;
 			var rotuloCampo = obterRotuloCampo(campo) || 'Campo do modelo';
 			if (campo.tagName === 'SELECT') {
-				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]') {
+				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]' || valorCampo === 'Selecione...') {
 					erros.push(rotuloCampo);
 				}
 			} else if (campo.type === 'checkbox' || campo.type === 'radio') {
@@ -625,9 +627,12 @@
 
 	// ===== EXIBE MODAL USANDO O SIGA =====
 	function exibirModalErro(mensagem) {
+		// Substitui quebras de linha por <br> para exibição no modal
+		var mensagemHtml = mensagem.replace(/\n/g, '<br>');
+
 		// Se existir o sigaModal, usa ele
 		if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-			sigaModal.alerta(mensagem);
+			sigaModal.alerta(mensagemHtml);
 			return;
 		}
 
@@ -636,8 +641,6 @@
 		var modalExistente = document.getElementById(modalId);
 		if (modalExistente) modalExistente.remove();
 
-		// CORREÇÃO: substitui as quebras de linha em JavaScript puro
-		var mensagemHtml = mensagem.replace(/\n/g, '<br>');
 		var modalHtml = `
 			<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
 				<div class="modal-dialog" role="document">
@@ -670,7 +673,7 @@
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos:\n\n' + erros.join('\n');
+			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos:\n\n• ' + erros.join('\n• ');
 			exibirModalErro(msg);
 			return false;
 		}
@@ -703,7 +706,7 @@
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n' + erros.join('\n');
+			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n• ' + erros.join('\n• ');
 			exibirModalErro(msg);
 			if (typeof sigaSpinner !== 'undefined' && sigaSpinner.ocultar) sigaSpinner.ocultar();
 			return false;
