@@ -1872,7 +1872,8 @@ public class ExBL extends CpBL {
 		}
 
 		String s = null;
-		DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtMov, titular,
+		final Date dtAssinatura = dtMov != null ? dtMov : new Date();
+		DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtAssinatura, titular,
 				cadastrante, cosignatario, fSubstituindoSubscritor, fSubstituindoCosignatario);
 		
 		try {
@@ -1885,7 +1886,7 @@ public class ExBL extends CpBL {
 				if (usuarioDoToken != null && usuarioDoToken.equivale(cadastrante))
 					usuarioDoToken = cadastrante;
 	
-				mov = criarNovaMovimentacao(tpMovAssinatura, cadastrante, lotaCadastrante, doc.getMobilGeral(), dtMov, 
+				mov = criarNovaMovimentacao(tpMovAssinatura, cadastrante, lotaCadastrante, doc.getMobilGeral(), dtAssinatura,
 						assinante, null, null, null, null);
 	
 				gerarIdDeMovimentacao(mov);
@@ -1910,7 +1911,7 @@ public class ExBL extends CpBL {
 				throw new RuntimeException("Erro ao assinar documento: " + e.getLocalizedMessage(), e);
 			}
 	
-			depoisDeAssinar(cadastrante, lotaCadastrante, doc, mov, dtMov, juntar, tramitar, fPreviamenteAssinado, fPreviamenteAutenticado,
+			depoisDeAssinar(cadastrante, lotaCadastrante, doc, mov, dtAssinatura, juntar, tramitar, fPreviamenteAssinado, fPreviamenteAutenticado,
 					usuarioDoToken);
 		
 		} catch (final Exception e) {
@@ -2164,7 +2165,9 @@ public class ExBL extends CpBL {
 				}
 			}
 	
-			DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtMov, titular,
+			final Date dtAssinatura = dtMov != null ? dtMov : new Date();
+
+			DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtAssinatura, titular,
 					subscritor, cosignatario, fSubstituindoSubscritor, fSubstituindoCosignatario);
 
 			final ExMovimentacao mov;
@@ -2182,7 +2185,7 @@ public class ExBL extends CpBL {
 				mov = criarNovaMovimentacao(
 						autenticando ? ExTipoDeMovimentacao.CONFERENCIA_COPIA_COM_SENHA
 								: ExTipoDeMovimentacao.ASSINATURA_COM_SENHA,
-						cadastrante, lotaCadastrante, doc.getMobilGeral(), dtMov, assinante, null, null, null, null);
+						cadastrante, lotaCadastrante, doc.getMobilGeral(), dtAssinatura, assinante, null, null, null, null);
 				mov.setDescrMov(assinante.getNomePessoa() + ":" + assinante.getSigla() + " ["+formaAssinaturaSenha+"]");
 				String cpf = Long.toString(assinante.getCpfPessoa());
 				acrescentarHashDeAuditoria(mov, sha256, autenticando, assinante.getNomePessoa(), cpf, null);
@@ -2198,7 +2201,7 @@ public class ExBL extends CpBL {
 				throw new RuntimeException("Erro ao registrar assinatura: " + getRootCauseMessage(e), e);
 			}
 			
-			depoisDeAssinar(cadastrante, lotaCadastrante, doc, mov, dtMov, juntar, tramitar, fPreviamenteAssinado, fPreviamenteAutenticado,
+			depoisDeAssinar(cadastrante, lotaCadastrante, doc, mov, dtAssinatura, juntar, tramitar, fPreviamenteAssinado, fPreviamenteAutenticado,
 					subscritor);
 
 		} catch (final Exception e) {

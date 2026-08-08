@@ -30,6 +30,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.SQLException;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -101,6 +103,12 @@ public class Documento {
 	private static final Long EXIBICAO_PAG_PDF_COMPL_MB_TAMANHOMAX = Prop.getLong("/siga.exibicao.paginada.pdf.completo.megabytes.tamanhomax");
 	
 	private static Log log = LogFactory.getLog(Documento.class);
+
+	private static final ZoneId ZONA_CARIMBO = ZoneId.of("America/Sao_Paulo");
+	private static final DateTimeFormatter FORMATO_CARIMBO_DATA_HORA = DateTimeFormatter
+			.ofPattern("dd/MM/yyyy 'às' HH:mm:ss");
+	private static final DateTimeFormatter FORMATO_CARIMBO_DATA_HORA_CURTA = DateTimeFormatter
+			.ofPattern("dd/MM/yy 'às' HH:mm:ss");
 
 	public static ExMobil getMobil(String requestURI) throws SecurityException,
 			IllegalAccessException, InvocationTargetException,
@@ -215,7 +223,7 @@ public class Documento {
 				/**** ****/
 				
 				s.append(" - ");
-				s.append(Data.formatDDMMYYYY_AS_HHMMSS(movAssinatura.getData()));
+				s.append(formatarDataHoraCarimbo(movAssinatura.getData()));
 			}
 			if (!assinantes.contains(s.toString())) {
 				assinantes.add(s.toString());
@@ -236,7 +244,7 @@ public class Documento {
 				s = s.replace(":", " - ");
 				s = s.replace("EM SUBSTITUIÇÃO A", "em substituição a");
 				s = s.intern();				
-				s +=" - " + Data.formatDDMMYY_AS_HHMMSS(movAssinatura.getData());
+				s +=" - " + formatarDataHoraCarimboCurta(movAssinatura.getData());
 			}
 			if (!assinantes.contains(s)) {
 				assinantes.add(s);
@@ -244,6 +252,19 @@ public class Documento {
 		}
 		return assinantes;
 	}
+
+	private static String formatarDataHoraCarimbo(Date data) {
+		if (data == null)
+			return null;
+		return FORMATO_CARIMBO_DATA_HORA.format(data.toInstant().atZone(ZONA_CARIMBO));
+	}
+
+	private static String formatarDataHoraCarimboCurta(Date data) {
+		if (data == null)
+			return null;
+		return FORMATO_CARIMBO_DATA_HORA_CURTA.format(data.toInstant().atZone(ZONA_CARIMBO));
+	}
+
 
 	public static String getAssinantesString(Set<ExMovimentacao> movsAssinatura, Date dtDoc) {
 		ArrayList<String> als = getAssinantesStringLista(movsAssinatura,dtDoc);

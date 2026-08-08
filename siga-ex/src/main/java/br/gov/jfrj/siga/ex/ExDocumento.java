@@ -104,6 +104,10 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 
 	private static final Logger log = Logger.getLogger(ExDocumento.class);
 
+	private static final ZoneId ZONA_CARIMBO = ZoneId.of("America/Sao_Paulo");
+	private static final DateTimeFormatter FORMATO_CARIMBO_DATA_HORA = DateTimeFormatter
+			.ofPattern("dd/MM/yyyy 'às' HH:mm:ss");
+
 	@Transient
 	private List<ExMovimentacao> listaMovimentacaoPorRestricaoAcesso;	
 	
@@ -2203,10 +2207,17 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 			if (assinatura.getSubscritor().equivale(subscritor)
 					|| (!assinatura.getSubscritor().equivale(assinatura.getCadastrante())
 							&& assinatura.getCadastrante().equivale(subscritor)))
-				return Data.formatDDMMYYYY_AS_HHMMSS(assinatura.getData());
+				return formatarDataHoraCarimbo(assinatura.getData());
 		}
 		return null;
 	}
+
+	private String formatarDataHoraCarimbo(Date data) {
+		if (data == null)
+			return null;
+		return FORMATO_CARIMBO_DATA_HORA.format(data.toInstant().atZone(ZONA_CARIMBO));
+	}
+
 
 	/**
 	 * verifica se um documento ainda está em rascunho, ou seja, se não está
