@@ -530,37 +530,43 @@
 		}
 	}
 
+	// ===== FUNÇÃO PARA OBTER RÓTULO DOS CAMPOS =====
 	function obterRotuloCampo(campo) {
 		if (campo.id) {
 			var label = document.querySelector('label[for="' + campo.id + '"]');
 			if (label) return label.innerText.trim().replace(/\*/g, '').trim();
 		}
-		var parent = campo.closest ? campo.closest('.form-group, .col-sm, .row') : null;
+		var parent = campo.closest ? campo.closest('.form-group, .col-sm, .row, .col') : null;
 		if (parent) {
 			var labelParent = parent.querySelector('label');
 			if (labelParent) return labelParent.innerText.trim().replace(/\*/g, '').trim();
+		}
+		var container = campo.closest ? campo.closest('.siga-selecao-container, .form-group') : null;
+		if (container) {
+			var lbl = container.querySelector('label');
+			if (lbl) return lbl.innerText.trim().replace(/\*/g, '').trim();
 		}
 		if (campo.name) {
 			var partes = campo.name.split('.');
 			var nome = partes[partes.length - 1];
 			return nome.replace(/([A-Z])/g, ' $1').trim() || campo.id || 'Campo';
 		}
-		return campo.id || 'Campo';
+		return campo.id || 'Campo não identificado';
 	}
 
+	// ===== VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS =====
 	function validarTodosCamposObrigatorios() {
 		var erros = [];
 		var form = document.getElementById('frm');
 		if (!form) return ['Formulário não encontrado'];
 
+		// 1. Campos com required
 		var requiredFields = form.querySelectorAll('[required]');
 		for (var i = 0; i < requiredFields.length; i++) {
 			var field = requiredFields[i];
-			if (field.offsetParent === null || field.style.display === 'none') continue;
-
+			if (field.offsetParent === null || field.style.display === 'none' || field.disabled) continue;
 			var valor = field.value;
 			var rotulo = obterRotuloCampo(field);
-
 			if (field.tagName === 'SELECT') {
 				if (!valor || valor === '' || valor === '0' || valor === '[Selecione]' || valor === 'Selecione...') {
 					erros.push(rotulo);
@@ -583,23 +589,87 @@
 				}
 			}
 		}
+
+		// 2. Campos do modelo com data-obrigatorio
+		var camposModelo = form.querySelectorAll('[data-obrigatorio="true"]');
+		for (var k = 0; k < camposModelo.length; k++) {
+			var campo = camposModelo[k];
+			if (campo.offsetParent === null || campo.style.display === 'none' || campo.disabled) continue;
+			var valorCampo = campo.value;
+			var rotuloCampo = obterRotuloCampo(campo) || 'Campo do modelo';
+			if (campo.tagName === 'SELECT') {
+				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]') {
+					erros.push(rotuloCampo);
+				}
+			} else if (campo.type === 'checkbox' || campo.type === 'radio') {
+				var nomeGrupo = campo.name;
+				if (nomeGrupo) {
+					var grupo = form.querySelectorAll('input[name="' + nomeGrupo + '"]');
+					var marcado = false;
+					for (var l = 0; l < grupo.length; l++) {
+						if (grupo[l].checked) { marcado = true; break; }
+					}
+					if (!marcado) erros.push(rotuloCampo);
+				} else if (!campo.checked) {
+					erros.push(rotuloCampo);
+				}
+			} else {
+				if (!valorCampo || valorCampo.trim() === '') {
+					erros.push(rotuloCampo);
+				}
+			}
+		}
+
 		return erros;
 	}
 
+	// ===== EXIBE MODAL USANDO O SIGA =====
+	function exibirModalErro(mensagem) {
+		// Se existir o sigaModal, usa ele
+		if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
+			sigaModal.alerta(mensagem);
+			return;
+		}
+
+		// Fallback: cria um modal Bootstrap manualmente
+		var modalId = 'modalValidacao';
+		var modalExistente = document.getElementById(modalId);
+		if (modalExistente) modalExistente.remove();
+
+		var modalHtml = `
+			<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Alerta</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							${mensagem.replace(/\n/g, '<br>')}
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+		$('body').append(modalHtml);
+		$('#' + modalId).modal('show');
+	}
+
+	// ===== FUNÇÃO GRAVAR =====
 	function gravarDoc() {
-		// Sincroniza editores dinâmicos (CKEditor, entrevista, etc.)
 		if (typeof sincronizarEditoresDinamicos === 'function') {
 			sincronizarEditoresDinamicos();
 		}
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = '❌ Os seguintes campos obrigatórios precisam ser preenchidos:\n\n• ' + erros.join('\n• ');
-			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-				sigaModal.alerta(msg);
-			} else {
-				alert(msg);
-			}
+			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos:\n\n' + erros.join('\n');
+			exibirModalErro(msg);
 			return false;
 		}
 
@@ -612,20 +682,16 @@
 
 		document.getElementById('gravarAssinar').value = 'false';
 		document.getElementById('fecharDoc').value = 'false';
-
 		var frm = document.getElementById('frm');
 		if (frm) {
 			frm.action = 'gravar?redirect=listar';
 			frm.submit();
 		} else {
-			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-				sigaModal.alerta('Erro: formulário não encontrado.');
-			} else {
-				alert('Erro: formulário não encontrado.');
-			}
+			exibirModalErro('Erro: formulário não encontrado.');
 		}
 	}
 
+	// ===== FUNÇÃO FINALIZAR E ASSINAR =====
 	function gravarAssinarDoc() {
 		if (typeof sigaSpinner !== 'undefined' && sigaSpinner.mostrar) sigaSpinner.mostrar();
 
@@ -635,12 +701,8 @@
 
 		var erros = validarTodosCamposObrigatorios();
 		if (erros.length > 0) {
-			var msg = '❌ Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n• ' + erros.join('\n• ');
-			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-				sigaModal.alerta(msg);
-			} else {
-				alert(msg);
-			}
+			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n' + erros.join('\n');
+			exibirModalErro(msg);
 			if (typeof sigaSpinner !== 'undefined' && sigaSpinner.ocultar) sigaSpinner.ocultar();
 			return false;
 		}
@@ -675,11 +737,7 @@
 		var winProp = 'width=' + popW + ',height=' + popH + ',left=' + winleft + ',top=' + winUp + ',scrollbars=yes,resizable';
 		var win = window.open('', 'doc', winProp);
 		if (!win) {
-			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-				sigaModal.alerta('Por favor, permita pop-ups para visualizar o documento.');
-			} else {
-				alert('Por favor, permita pop-ups para visualizar o documento.');
-			}
+			exibirModalErro('Por favor, permita pop-ups para visualizar o documento.');
 			return;
 		}
 		var t = frm.target;
@@ -781,6 +839,11 @@
 		}
 		
 		$('[data-toggle="tooltip"]').tooltip();
+
+		// Garante que o modal do SIGA exista
+		if (typeof sigaModal === 'undefined') {
+			console.warn('sigaModal não encontrado, usando fallback Bootstrap.');
+		}
 	});
 
 	window.onbeforeunload = function() {
