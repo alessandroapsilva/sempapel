@@ -1422,8 +1422,8 @@ public class ExMovimentacaoController extends ExController {
 
 		Ex.getInstance()
 				.getBL()
-				.apensarDocumento(getCadastrante(), getTitular(),
-						getLotaTitular(), builder.getMob(),
+				.apensarDocumento(getCadastrante(), getLotaTitular(),
+						builder.getMob(),
 						mov.getExMobilRef(), mov.getDtMov(),
 						mov.getSubscritor(), mov.getTitular());
 		ExDocumentoController.redirecionarParaExibir(result, mov

@@ -3639,15 +3639,14 @@ public class ExBL extends CpBL {
 				ExMobil mobApenso = mob.doc().getVolume(mob.getNumSequencia() - 1);
 				for (ExMobil apensoAoApenso : mobApenso.getApensosExcetoVolumeApensadoAoProximo()) {
 					desapensarDocumento(cadastrante, lotaCadastrante, apensoAoApenso, null, null, null);
-					apensarDocumento(cadastrante, cadastrante, lotaCadastrante, apensoAoApenso, mob, null, null, null);
+					apensarDocumento(cadastrante, lotaCadastrante, apensoAoApenso, mob, null, null, titular);
 				}
 				if (mobApenso.isApensado()) {
 					ExMobil outroMestreDoApenso = mobApenso.getMestre();
 					desapensarDocumento(cadastrante, lotaCadastrante, mobApenso, null, null, null);
-					apensarDocumento(cadastrante, cadastrante, lotaCadastrante, mob, outroMestreDoApenso, null, null,
-							null);
+					apensarDocumento(cadastrante, lotaCadastrante, mob, outroMestreDoApenso, null, null, titular);
 				}
-				apensarDocumento(cadastrante, cadastrante, lotaCadastrante, mobApenso, mob, null, null, null);
+				apensarDocumento(cadastrante, lotaCadastrante, mobApenso, mob, null, null, titular);
 			}
 		} catch (final Exception e) {
 			cancelarAlteracao();
@@ -6221,7 +6220,7 @@ public class ExBL extends CpBL {
 					doc.setExModelo(dao().consultar(idMod, ExModelo.class, false));
 				}
 
-				final String strHtml;
+				String strHtml;
 				try {
 					strHtml = processarModelo(doc, null, "processar_modelo", null, null);
 				} catch (Exception e) {
@@ -7241,11 +7240,13 @@ public class ExBL extends CpBL {
 			}
 		}
 
-		Ex.getInstance().getComp().afirmar("Não é possível apensar", ExPodeApensar.class, docTitular, lotaCadastrante, mob);
+		final DpPessoa pessoaCompetencia = titular != null ? titular : cadastrante;
 
-		Ex.getInstance().getComp().afirmar("Não é possível apensar pois não é possível movimentar o mestre", ExPodeMovimentar.class, docTitular, lotaCadastrante, mobMestre);
+		Ex.getInstance().getComp().afirmar("Não é possível apensar", ExPodeApensar.class, pessoaCompetencia, lotaCadastrante, mob);
 
-		Ex.getInstance().getComp().afirmar("Não é possível apensar pois não é possível movimentar", ExPodeMovimentar.class, docTitular, lotaCadastrante, mob);
+		Ex.getInstance().getComp().afirmar("Não é possível apensar pois não é possível movimentar o mestre", ExPodeMovimentar.class, pessoaCompetencia, lotaCadastrante, mobMestre);
+
+		Ex.getInstance().getComp().afirmar("Não é possível apensar pois não é possível movimentar", ExPodeMovimentar.class, pessoaCompetencia, lotaCadastrante, mob);
 
 		try {
 			iniciarAlteracao();

@@ -23,8 +23,8 @@ public class DocumentosSiglaIncluirDocumentoPost implements IDocumentosSiglaApen
 
 		Ex.getInstance().getComp().afirmar("Não é possível apensar", ExPodeApensar.class, ctx.getCadastrante(), ctx.getLotaTitular(), mobFilho);
 
-		Ex.getInstance().getBL().apensarDocumento(ctx.getCadastrante(), ctx.getTitular(), ctx.getLotaCadastrante(),
-				mobFilho, mobPai, dt, ctx.getCadastrante(), ctx.getCadastrante());
+		Ex.getInstance().getBL().apensarDocumento(ctx.getCadastrante(), ctx.getLotaCadastrante(), mobFilho, mobPai,
+				dt, ctx.getCadastrante(), ctx.getTitular());
 
 		resp.status = "OK";
 	}

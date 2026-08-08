@@ -191,11 +191,9 @@ public class Documento {
 		ArrayList<String> assinantes = new ArrayList<String>();
 		for (ExMovimentacao movAssinatura : movsAssinatura) {
 			StringBuilder s = new StringBuilder();
-			Date dataDeInicioDeObrigacaoExibirRodapeDeAssinatura=null;
 			if (movAssinatura.getExTipoMovimentacao() == ExTipoDeMovimentacao.SOLICITACAO_DE_ASSINATURA) {
 				s.append(Texto.maiusculasEMinusculas(movAssinatura.getCadastrante().getNomePessoa()));
 			} else {
-				dataDeInicioDeObrigacaoExibirRodapeDeAssinatura = Prop.getData("rodape.data.assinatura.ativa");
 				s.append(movAssinatura.getDescrMov().trim().toUpperCase().split(":")[0]);
 				
 
@@ -216,10 +214,8 @@ public class Documento {
 				}
 				/**** ****/
 				
-				if(Prop.isGovSP() || (dataDeInicioDeObrigacaoExibirRodapeDeAssinatura != null && !dataDeInicioDeObrigacaoExibirRodapeDeAssinatura.after(dtDoc))) {
-					s.append(" - ");
-					s.append(Data.formatDDMMYYYY_AS_HHMMSS(movAssinatura.getData()));
-				}				 
+				s.append(" - ");
+				s.append(Data.formatDDMMYYYY_AS_HHMMSS(movAssinatura.getData()));
 			}
 			if (!assinantes.contains(s.toString())) {
 				assinantes.add(s.toString());
@@ -233,20 +229,14 @@ public class Documento {
 		ArrayList<String> assinantes = new ArrayList<String>();
 		for (ExMovimentacao movAssinatura : movsAssinatura) {
 			String s;
-			Date dataDeInicioDeObrigacaoExibirRodapeDeAssinatura=null;
 			if (movAssinatura.getExTipoMovimentacao() == ExTipoDeMovimentacao.SOLICITACAO_DE_ASSINATURA) {
 				s = Texto.maiusculasEMinusculas(movAssinatura.getCadastrante().getNomePessoa());
 			} else {
-				dataDeInicioDeObrigacaoExibirRodapeDeAssinatura = Prop.getData("rodape.data.assinatura.ativa");
 				s = movAssinatura.getDescrMov().trim().toUpperCase();
 				s = s.replace(":", " - ");
 				s = s.replace("EM SUBSTITUIÇÃO A", "em substituição a");
 				s = s.intern();				
-				if (Prop.isGovSP()
-					|| (dataDeInicioDeObrigacaoExibirRodapeDeAssinatura != null && !dataDeInicioDeObrigacaoExibirRodapeDeAssinatura.after(dtDoc)
-							)	) {
-					s +=" - " + Data.formatDDMMYY_AS_HHMMSS(movAssinatura.getData());
-				}				
+				s +=" - " + Data.formatDDMMYY_AS_HHMMSS(movAssinatura.getData());
 			}
 			if (!assinantes.contains(s)) {
 				assinantes.add(s);

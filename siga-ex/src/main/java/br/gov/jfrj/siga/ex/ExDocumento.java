@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 
 import br.gov.jfrj.itextpdf.Documento;
 import br.gov.jfrj.siga.base.AplicacaoException;
+import br.gov.jfrj.siga.base.Data;
 import br.gov.jfrj.siga.base.DateUtils;
 import br.gov.jfrj.siga.base.Prop;
 import br.gov.jfrj.siga.base.SigaMessages;
@@ -514,7 +515,11 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 							sb.append("</span>");
 						} else {
 							if (Prop.getBool("assinatura.estampar")) {
-								sb.append("<span>- assinado eletronicamente -<br/>");
+								sb.append("<span>- assinado eletronicamente");
+								String dataHoraAssinatura = getDataHoraAssinaturaPessoaComTokenOuSenha(subscritor);
+								if (dataHoraAssinatura != null)
+									sb.append(" em ").append(dataHoraAssinatura);
+								sb.append(" -<br/>");
 							} else {
 								sb.append("<span>");
 							}
@@ -2191,6 +2196,16 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 				return true;
 		}
 		return false;
+	}
+
+	public String getDataHoraAssinaturaPessoaComTokenOuSenha(DpPessoa subscritor) {
+		for (ExMovimentacao assinatura : getAssinaturasComTokenOuSenha()) {
+			if (assinatura.getSubscritor().equivale(subscritor)
+					|| (!assinatura.getSubscritor().equivale(assinatura.getCadastrante())
+							&& assinatura.getCadastrante().equivale(subscritor)))
+				return Data.formatDDMMYYYY_AS_HHMMSS(assinatura.getData());
+		}
+		return null;
 	}
 
 	/**
