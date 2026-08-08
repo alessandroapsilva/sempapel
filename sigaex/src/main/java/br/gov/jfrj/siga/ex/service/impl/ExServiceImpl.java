@@ -217,7 +217,7 @@ public class ExServiceImpl implements ExService {
 				PessoaLotacaoParser cadastranteParser = new PessoaLotacaoParser(siglaCadastrante);
 				PessoaLotacaoParser destinoParser = new PessoaLotacaoParser(siglaDestino);
 				
-				Ex.getInstance().getBL().alterarPrincipal(cadastranteParser.getPessoa(), cadastranteParser.getPessoa(),
+				Ex.getInstance().getBL().alterarPrincipal(cadastranteParser.getPessoa(),
 						cadastranteParser.getLotacao(), null, mobFilho, mobPai, null, destinoParser.getPessoa(),
 						destinoParser.getPessoa(), "1");
 				return true;
