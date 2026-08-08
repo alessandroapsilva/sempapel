@@ -6,10 +6,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.ocpsoft.prettytime.PrettyTime;
 
 public class Data {
+
+	private static final TimeZone TIMEZONE_PADRAO = TimeZone.getTimeZone("America/Sao_Paulo");
 
 	// Verifica se a data está entre o ano 2000 e o ano 2100
 	@SuppressWarnings("deprecation")
@@ -69,6 +72,7 @@ public class Data {
 	public static String formatDDMMYY_AS_HHMMSS(Date dt) {
 		if (dt != null) {
 			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy _ HH:mm:ss");
+			df.setTimeZone(TIMEZONE_PADRAO);
 			return df.format(dt).replaceAll("_", "às");
 		}
 		return null;
@@ -76,6 +80,7 @@ public class Data {
 	public static String formatDDMMYYYY_AS_HHMMSS(Date dt) {
 		if (dt != null) {
 			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy _ HH:mm:ss");
+			df.setTimeZone(TIMEZONE_PADRAO);
 			return df.format(dt).replaceAll("_", "às");
 		}
 		return null;
