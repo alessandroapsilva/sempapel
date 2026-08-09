@@ -51,7 +51,7 @@ function validarCamposEntrevista() {
 	var obrigatorios = $('#frm').find('[name=obrigatorios]');		
 	
 	obrigatorios.each(function() {
-		var elemento = $('[name="' + this.value + '"]');
+		var elemento = $('[name="' + this.value + '"]').first();
 		if (elemento.length == 0 || !campoDeveSerValidadoDocumento(elemento)) {
 			return;
 		}
@@ -63,17 +63,7 @@ function validarCamposEntrevista() {
 		var temCnpj = !!elemento.data('formatarCnpj');
 		
 		if (valor == null || valor === '' || !valor || /^\s*$/.test(valor)) {
-			var tituloLabel = obterLabel(elemento);				
-			var mensagem = 'Favor preencher o campo';
-			
-			if (tituloLabel.text().length > 0) {								
-				if (temCpf || temCnpj) {
-					mensagem = mensagem.concat(' '.concat(tituloLabel.text().trim()));					
-				} else {
-					mensagem = mensagem.concat(' '.concat(tituloLabel.text().trim().toLowerCase()));					
-				}
-				mensagem = mensagem.replace(':', ' ');
-			}
+			var mensagem = montarMensagemCampoObrigatorioDocumento(elemento);
 			
 			aplicarErro(elemento, mensagem);						
 		} else {
@@ -129,11 +119,16 @@ function obterMensagensCamposInvalidosDocumento() {
 }
 
 function obterMensagemCampoInvalidoDocumento(elemento) {
-	var mensagem = obterMensagemDivErro(elemento).filter(function() {
+	var mensagemDiv = obterMensagemDivErro(elemento).filter(function() {
 		return $(this).text().trim().length > 0;
-	}).first().text().trim();
+	}).first();
+	var mensagem = mensagemDiv.text().trim();
 
 	if (mensagem) {
+		var nomeCampoReal = limparNomeCampoDocumento(mensagemDiv.attr('data-nome-campo-documento'));
+		if (nomeCampoReal && /^Favor preencher o campo/i.test(mensagem)) {
+			return 'Favor preencher o campo ' + nomeCampoReal;
+		}
 		return mensagem;
 	}
 
@@ -436,6 +431,7 @@ function aplicarMensagemErro(elemento, mensagem) {
 	}
 	
 	if (mensagemDiv.length > 0) {
+		mensagemDiv.attr('data-nome-campo-documento', obterNomeCampoDocumento(elemento));
 		if (elemento[0].type === 'radio' || elemento[0].type === 'checkbox') {
 			mensagemDiv.text('');
 			mensagemDiv.last().text(mensagem);
@@ -473,11 +469,11 @@ function obterNomeCampoDocumento(elemento) {
 	}
 
 	if (!label) {
-		label = elemento.attr('aria-label')
+		label = elemento.data('nome')
+				|| elemento.data('label')
+				|| elemento.attr('aria-label')
 				|| elemento.attr('title')
 				|| elemento.attr('placeholder')
-				|| elemento.data('nome')
-				|| elemento.data('label')
 				|| '';
 	}
 
@@ -496,10 +492,10 @@ function limparNomeCampoDocumento(label) {
 	return String(label || '')
 			.replace(/\*/g, '')
 			.replace(/\(obrigatório\)/ig, '')
+			.replace(/\bobrigatório\b/ig, '')
 			.replace(/:/g, '')
 			.replace(/\s+/g, ' ')
-			.trim()
-			.toLowerCase();
+			.trim();
 }
 
 function obterLabel(elemento) {
@@ -514,7 +510,13 @@ function obterLabel(elemento) {
 	}
 
 	if (tituloLabel.length == 0) {
-		tituloLabel = $('[data-nome-ref="' + elementoName + '"]');
+		var nomesPossiveis = obterNomesPossiveisCampoDocumento(elementoName);
+		for (var i = 0; i < nomesPossiveis.length; i++) {
+			tituloLabel = $('[data-nome-ref="' + nomesPossiveis[i] + '"], label[for="' + nomesPossiveis[i] + '"]');
+			if (tituloLabel.length > 0) {
+				break;
+			}
+		}
 	}
 
 	if (tituloLabel.length == 0) {
@@ -546,6 +548,25 @@ function obterLabel(elemento) {
 	}	
 	
 	return tituloLabel;
+}
+
+function obterNomesPossiveisCampoDocumento(nomeCampo) {
+	var nomes = [];
+
+	function incluir(nome) {
+		if (nome && nomes.indexOf(nome) < 0) {
+			nomes.push(nome);
+		}
+	}
+
+	incluir(nomeCampo);
+	incluir(nomeCampo.replace('Sel.sigla', 'Sel.id'));
+	incluir(nomeCampo.replace('Sel.id', 'Sel.sigla'));
+	incluir(nomeCampo.replace(/^exDocumentoDTO\./, ''));
+	incluir(nomeCampo.replace(/^exDocumentoDTO\./, '').replace('Sel.sigla', 'Sel.id'));
+	incluir(nomeCampo.replace(/^exDocumentoDTO\./, '').replace('Sel.id', 'Sel.sigla'));
+
+	return nomes;
 }
 
 function isCpfValido(cpf) {	

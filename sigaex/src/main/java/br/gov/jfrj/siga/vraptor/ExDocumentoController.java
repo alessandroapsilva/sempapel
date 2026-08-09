@@ -1980,6 +1980,11 @@ public class ExDocumentoController extends ExController {
 							.getDtRegDocDDMMYY());
 			result.use(Results.http()).body(body);
 		} else {
+			if ("true".equalsIgnoreCase(param("exDocumentoDTO.assinar"))) {
+				result.redirectTo("/app/expediente/mov/assinar?sigla=" + exDocumentoDTO.getDoc().getSigla());
+				return;
+			}
+
 			final String url = MessageFormat.format(
 					"exibir?sigla={0}{1}",
 					exDocumentoDTO.getDoc().getSigla(),

@@ -16,65 +16,16 @@
 <c:set var="exibirExplicacao" scope="request" value="${libs:podeExibirRegraDeNegocioEmBotoes(titular, lotaTitular)}" />
 <siga:pagina titulo="${docVO.sigla}" popup="${param.popup}" >
 
-<div id="overlay-assinatura" style="position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:999999;display:none;align-items:center;justify-content:center;flex-direction:column;">
-	<div style="text-align:center;">
-		<i class="fas fa-spinner fa-spin fa-3x" style="font-size:3rem;"></i>
-		<p style="margin-top:1rem;font-size:1.2rem;">Redirecionando para assinatura...</p>
-	</div>
-</div>
-
 <script type="text/javascript">
 (function() {
-    var redirecionar = sessionStorage.getItem('redirecionarParaAssinatura');
-    if (redirecionar === 'true') {
-        // Mostra o overlay
-        var overlay = document.getElementById('overlay-assinatura');
-        if (overlay) overlay.style.display = 'flex';
-        
-        // Tenta obter a sigla
-        var sigla = sessionStorage.getItem('siglaParaAssinar') || '';
-        if (!sigla) {
-            var params = new URLSearchParams(window.location.search);
-            sigla = params.get('sigla') || '';
-        }
-        if (!sigla) {
-            var codigoDoc = document.getElementById('codigoDoc');
-            if (codigoDoc) sigla = codigoDoc.innerHTML.trim();
-        }
-        
-        if (sigla && sigla !== '' && sigla !== 'Novo Documento' && sigla !== 'NOVO') {
-            // Redireciona imediatamente
-            sessionStorage.removeItem('redirecionarParaAssinatura');
-            sessionStorage.removeItem('siglaParaAssinar');
-            window.location.replace("/sigaex/app/expediente/mov/assinar?sigla=" + sigla);
-        } else {
-            // Polling: tenta a cada 200ms por até 5 segundos
-            var tentativas = 0;
-            var maxTentativas = 25;
-            var intervalo = setInterval(function() {
-                tentativas++;
-                var sigla2 = sessionStorage.getItem('siglaParaAssinar') || '';
-                if (!sigla2) {
-                    var params2 = new URLSearchParams(window.location.search);
-                    sigla2 = params2.get('sigla') || '';
-                }
-                if (!sigla2) {
-                    var codigoDoc2 = document.getElementById('codigoDoc');
-                    if (codigoDoc2) sigla2 = codigoDoc2.innerHTML.trim();
-                }
-                if (sigla2 && sigla2 !== '' && sigla2 !== 'Novo Documento' && sigla2 !== 'NOVO') {
-                    clearInterval(intervalo);
-                    sessionStorage.removeItem('redirecionarParaAssinatura');
-                    sessionStorage.removeItem('siglaParaAssinar');
-                    window.location.replace("/sigaex/app/expediente/mov/assinar?sigla=" + sigla2);
-                } else if (tentativas >= maxTentativas) {
-                    clearInterval(intervalo);
-                    // Se não conseguir, esconde o overlay e mostra o botão de fallback
-                    if (overlay) overlay.style.display = 'none';
-                    var btnFallback = document.getElementById('btn-assinar-fallback');
-                    if (btnFallback) btnFallback.style.display = 'inline-block';
-                }
-            }, 200);
+    sessionStorage.removeItem('redirecionarParaAssinatura');
+    sessionStorage.removeItem('siglaParaAssinar');
+
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('assinar') === 'true') {
+        var sigla = params.get('sigla') || '';
+        if (sigla && sigla !== 'Novo Documento' && sigla !== 'NOVO') {
+            window.location.replace('/sigaex/app/expediente/mov/assinar?sigla=' + encodeURIComponent(sigla));
         }
     }
 })();

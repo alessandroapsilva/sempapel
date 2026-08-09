@@ -545,12 +545,6 @@
 			return false;
 		}
 
-		sessionStorage.setItem('redirecionarParaAssinatura', 'true');
-		var siglaAtual = document.getElementById('codigoDoc') ? document.getElementById('codigoDoc').innerHTML.trim() : '';
-		if (siglaAtual && siglaAtual !== 'Novo Documento' && siglaAtual !== 'NOVO') {
-			sessionStorage.setItem('siglaParaAssinar', siglaAtual);
-		}
-
 		document.getElementById('gravarAssinar').value = 'true';
 		document.getElementById('fecharDoc').value = 'true';
 		var frm = document.getElementById('frm');
@@ -686,11 +680,6 @@
 		}
 		
 		$('[data-toggle="tooltip"]').tooltip();
-
-		// Garante que o modal do SIGA exista
-		if (typeof sigaModal === 'undefined') {
-			console.warn('sigaModal não encontrado, usando fallback Bootstrap.');
-		}
 	});
 
 	window.onbeforeunload = function() {
