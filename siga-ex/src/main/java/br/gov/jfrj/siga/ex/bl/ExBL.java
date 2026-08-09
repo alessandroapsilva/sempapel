@@ -1872,7 +1872,7 @@ public class ExBL extends CpBL {
 		}
 
 		String s = null;
-		final Date dtAssinatura = dtMov != null ? dtMov : new Date();
+		final Date dtAssinatura = new Date();
 		DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtAssinatura, titular,
 				cadastrante, cosignatario, fSubstituindoSubscritor, fSubstituindoCosignatario);
 		
@@ -2165,7 +2165,7 @@ public class ExBL extends CpBL {
 				}
 			}
 	
-			final Date dtAssinatura = dtMov != null ? dtMov : new Date();
+			final Date dtAssinatura = new Date();
 
 			DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtAssinatura, titular,
 					subscritor, cosignatario, fSubstituindoSubscritor, fSubstituindoCosignatario);
