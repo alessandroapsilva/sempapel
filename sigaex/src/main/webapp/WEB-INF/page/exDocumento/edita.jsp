@@ -530,188 +530,17 @@
 		}
 	}
 
-	// ===== FUNÇÃO PARA OBTER RÓTULO DOS CAMPOS =====
-	function obterRotuloCampo(campo) {
-		if (campo.id) {
-			var label = document.querySelector('label[for="' + campo.id + '"]');
-			if (label) return label.innerText.trim().replace(/\*/g, '').trim();
-		}
-		var parent = campo.closest ? campo.closest('.form-group, .col-sm, .row, .col') : null;
-		if (parent) {
-			var labelParent = parent.querySelector('label');
-			if (labelParent) return labelParent.innerText.trim().replace(/\*/g, '').trim();
-		}
-		var container = campo.closest ? campo.closest('.siga-selecao-container, .form-group') : null;
-		if (container) {
-			var lbl = container.querySelector('label');
-			if (lbl) return lbl.innerText.trim().replace(/\*/g, '').trim();
-		}
-		if (campo.name) {
-			var partes = campo.name.split('.');
-			var nome = partes[partes.length - 1];
-			return nome.replace(/([A-Z])/g, ' $1').trim() || campo.id || 'Campo';
-		}
-		return campo.id || 'Campo não identificado';
-	}
-
-	// ===== VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS =====
-	function validarTodosCamposObrigatorios() {
-		var erros = [];
-		var form = document.getElementById('frm');
-		if (!form) return ['Formulário não encontrado'];
-
-		// 1. Campos com required
-		var requiredFields = form.querySelectorAll('[required]');
-		for (var i = 0; i < requiredFields.length; i++) {
-			var field = requiredFields[i];
-			if (field.offsetParent === null || field.style.display === 'none' || field.disabled) continue;
-			var valor = field.value;
-			var rotulo = obterRotuloCampo(field);
-			if (field.tagName === 'SELECT') {
-				if (!valor || valor === '' || valor === '0' || valor === '[Selecione]' || valor === 'Selecione...') {
-					erros.push(rotulo);
-				}
-			} else if (field.type === 'checkbox' || field.type === 'radio') {
-				var nome = field.name;
-				if (nome) {
-					var grupo = form.querySelectorAll('input[name="' + nome + '"]');
-					var marcado = false;
-					for (var j = 0; j < grupo.length; j++) {
-						if (grupo[j].checked) { marcado = true; break; }
-					}
-					if (!marcado) erros.push(rotulo);
-				} else if (!field.checked) {
-					erros.push(rotulo);
-				}
-			} else {
-				if (!valor || valor.trim() === '') {
-					erros.push(rotulo);
-				}
-			}
-		}
-
-		// 2. Campos do modelo com data-obrigatorio ou classe obrigatorio
-		var camposModelo = form.querySelectorAll('[data-obrigatorio="true"], .obrigatorio, .required');
-		for (var k = 0; k < camposModelo.length; k++) {
-			var campo = camposModelo[k];
-			if (campo.offsetParent === null || campo.style.display === 'none' || campo.disabled) continue;
-			// Evita duplicar os já capturados
-			if (campo.hasAttribute('required')) continue;
-			var valorCampo = campo.value;
-			var rotuloCampo = obterRotuloCampo(campo) || 'Campo do modelo';
-			if (campo.tagName === 'SELECT') {
-				if (!valorCampo || valorCampo === '' || valorCampo === '0' || valorCampo === '[Selecione]') {
-					erros.push(rotuloCampo);
-				}
-			} else if (campo.type === 'checkbox' || campo.type === 'radio') {
-				var nomeGrupo = campo.name;
-				if (nomeGrupo) {
-					var grupo = form.querySelectorAll('input[name="' + nomeGrupo + '"]');
-					var marcado = false;
-					for (var l = 0; l < grupo.length; l++) {
-						if (grupo[l].checked) { marcado = true; break; }
-					}
-					if (!marcado) erros.push(rotuloCampo);
-				} else if (!campo.checked) {
-					erros.push(rotuloCampo);
-				}
-			} else {
-				if (!valorCampo || valorCampo.trim() === '') {
-					erros.push(rotuloCampo);
-				}
-			}
-		}
-
-		return erros;
-	}
-
-	// ===== EXIBE MODAL USANDO O SIGA =====
-	function exibirModalErro(mensagem) {
-		// Substitui quebras de linha por <br> para exibição no modal
-		var mensagemHtml = mensagem.replace(/\n/g, '<br>');
-
-		// Se existir o sigaModal, usa ele
-		if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-			sigaModal.alerta(mensagemHtml);
-			return;
-		}
-
-		// Fallback: cria um modal Bootstrap manualmente
-		var modalId = 'modalValidacao';
-		var modalExistente = document.getElementById(modalId);
-		if (modalExistente) modalExistente.remove();
-
-		var modalHtml = `
-			<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog" aria-hidden="true">
-				<div class="modal-dialog" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">Alerta</h5>
-							<button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-								<span aria-hidden="true">&times;</span>
-							</button>
-						</div>
-						<div class="modal-body">
-							${mensagemHtml}
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-primary" data-dismiss="modal">Fechar</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		`;
-		$('body').append(modalHtml);
-		$('#' + modalId).modal('show');
-	}
-
-	// ===== FUNÇÃO GRAVAR =====
-	function gravarDoc() {
-		if (typeof sincronizarEditoresDinamicos === 'function') {
-			sincronizarEditoresDinamicos();
-		}
-
-		var erros = validarTodosCamposObrigatorios();
-		console.log('Erros (gravar):', erros.length, erros);
-
-		if (erros.length > 0) {
-			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos:\n\n• ' + erros.join('\n• ');
-			exibirModalErro(msg);
-			return false;
-		}
-
-		personalizacaoJuntar();
-
-		if (typeof gravar === 'function') {
-			gravar(false);
-			return;
-		}
-
-		document.getElementById('gravarAssinar').value = 'false';
-		document.getElementById('fecharDoc').value = 'false';
-		var frm = document.getElementById('frm');
-		if (frm) {
-			frm.action = 'gravar?redirect=listar';
-			frm.submit();
-		} else {
-			exibirModalErro('Erro: formulário não encontrado.');
-		}
-	}
-
-	// ===== FUNÇÃO FINALIZAR E ASSINAR =====
 	function gravarAssinarDoc() {
 		if (typeof sigaSpinner !== 'undefined' && sigaSpinner.mostrar) sigaSpinner.mostrar();
 
-		if (typeof sincronizarEditoresDinamicos === 'function') {
-			sincronizarEditoresDinamicos();
+		if (typeof saveTimer !== 'undefined') {
+			clearTimeout(saveTimer);
 		}
 
-		var erros = validarTodosCamposObrigatorios();
-		console.log('Erros (finalizar):', erros.length, erros);
-
-		if (erros.length > 0) {
-			var msg = 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar:\n\n• ' + erros.join('\n• ');
-			exibirModalErro(msg);
+		if (!validar(false, true)) {
+			if (typeof triggerAutoSave === 'function') {
+				triggerAutoSave();
+			}
 			if (typeof sigaSpinner !== 'undefined' && sigaSpinner.ocultar) sigaSpinner.ocultar();
 			return false;
 		}
@@ -722,16 +551,21 @@
 			sessionStorage.setItem('siglaParaAssinar', siglaAtual);
 		}
 
-		if (typeof gravar === 'function') {
-			gravar(true);
-			return;
-		}
-
 		document.getElementById('gravarAssinar').value = 'true';
 		document.getElementById('fecharDoc').value = 'true';
 		var frm = document.getElementById('frm');
 		if (frm) {
 			frm.action = 'gravar';
+			window.customOnsubmit = function() {
+				return true;
+			};
+			if (typeof (frm.submitsave) != "undefined") {
+				frm.submit = frm.submitsave;
+			}
+			if (typeof (onSave) == "function") {
+				onSave();
+			}
+			document.getElementById("btnFinalizarAssinar").disabled = true;
 			frm.submit();
 		}
 	}
@@ -746,7 +580,11 @@
 		var winProp = 'width=' + popW + ',height=' + popH + ',left=' + winleft + ',top=' + winUp + ',scrollbars=yes,resizable';
 		var win = window.open('', 'doc', winProp);
 		if (!win) {
-			exibirModalErro('Por favor, permita pop-ups para visualizar o documento.');
+			if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
+				sigaModal.alerta('Por favor, permita pop-ups para visualizar o documento.');
+			} else {
+				alert('Por favor, permita pop-ups para visualizar o documento.');
+			}
 			return;
 		}
 		var t = frm.target;

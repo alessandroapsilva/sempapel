@@ -108,7 +108,7 @@ function gravarDoc() {
 	frm.submit();
 }
 
-function validar(silencioso) {
+function validar(silencioso, finalizar) {
 	personalizacaoJuntar();
 	
 	var descr = document.getElementsByName('exDocumentoDTO.descrDocumento')[0].value;
@@ -120,6 +120,39 @@ function validar(silencioso) {
 	var subscritor = document.getElementById('formulario_exDocumentoDTO.subscritorSel_id');
 	var temCossignatarios = document.getElementById('temCossignatarios');
 	var descricaoAutomatica = document.getElementById('descricaoAutomatica');
+	if (typeof validarCamposObrigatoriosEditaDocumento === 'function') {
+		validarCamposObrigatoriosEditaDocumento();
+	}
+	validarCamposEntrevista();
+
+	var camposInvalidos = $('#frm').find('.is-invalid').filter(function() {
+		if (typeof campoDeveAparecerNoResumoDocumento === 'function') {
+			return campoDeveAparecerNoResumoDocumento($(this));
+		}
+		return !$(this).is('input[type="hidden"]');
+	});
+	if (camposInvalidos.length > 0) {
+		if (!silencioso
+				&& typeof obterMensagensCamposInvalidosDocumento === 'function'
+				&& typeof exibirModalCamposObrigatoriosDocumento === 'function') {
+			var mensagens = obterMensagensCamposInvalidosDocumento();
+
+			if (mensagens.length > 0) {
+				exibirModalCamposObrigatoriosDocumento(mensagens, !!finalizar);
+				return false;
+			}
+		}
+
+		var mensagem = 'Favor verificar os campos destacados';
+
+		if (camposInvalidos.length == 1) {
+			mensagem = 'Favor verificar o campo destacado';
+		}
+
+		aviso(mensagem, silencioso, camposInvalidos[0]);
+		return false;
+	}
+
 	if (descricaoAutomatica == null && (descr == null || descr == "")) {
 		aviso("Preencha o campo Descrição antes de gravar o documento.",
 				silencioso);
@@ -165,20 +198,6 @@ function validar(silencioso) {
 				silencioso);
 		return false;
 	}
-	
-	validarCamposEntrevista();
-	
-	var camposInvalidos = $('#frm').find('.is-invalid').not('input[type="hidden"]');
-	if (camposInvalidos.length > 0) {
-		var mensagem = 'Favor verificar os campos destacados';
-		
-		if (camposInvalidos.length == 1) {
-			mensagem = 'Favor verificar o campo destacado';
-		}
-		
-		aviso(mensagem, silencioso, camposInvalidos[0]);
-		return false;
-	}	
 	
 	return true;
 }

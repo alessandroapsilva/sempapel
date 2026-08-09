@@ -52,6 +52,9 @@ function validarCamposEntrevista() {
 	
 	obrigatorios.each(function() {
 		var elemento = $('[name="' + this.value + '"]');
+		if (elemento.length == 0 || !campoDeveSerValidadoDocumento(elemento)) {
+			return;
+		}
 
 		var fieldName = this.value.replace("Sel.sigla", "Sel.id");
 		var valor = $('[name="' + fieldName + '"]').val();
@@ -102,6 +105,180 @@ function validarCamposEntrevista() {
 	
 	validarDocumentoCapturado();	
 	executarFuncoesCallback();
+}
+
+function obterMensagensCamposInvalidosDocumento() {
+	var mensagens = [];
+	var mensagensAdicionadas = {};
+
+	$('#frm').find('.is-invalid').each(function() {
+		var elemento = $(this);
+		if (!campoDeveAparecerNoResumoDocumento(elemento)) {
+			return;
+		}
+
+		var mensagem = obterMensagemCampoInvalidoDocumento(elemento);
+
+		if (mensagem && !mensagensAdicionadas[mensagem]) {
+			mensagensAdicionadas[mensagem] = true;
+			mensagens.push(mensagem);
+		}
+	});
+
+	return mensagens;
+}
+
+function obterMensagemCampoInvalidoDocumento(elemento) {
+	var mensagem = elemento.closest('.form-group, .custom-file, .row').find('.invalid-feedback').filter(function() {
+		return $(this).text().trim().length > 0;
+	}).first().text().trim();
+
+	if (mensagem) {
+		return mensagem;
+	}
+
+	var tituloLabel = obterLabel(elemento);
+	var label = tituloLabel && tituloLabel.length > 0 ? tituloLabel.text().trim() : '';
+	label = label.replace(/\*/g, '').replace(':', ' ').replace(/\s+/g, ' ').trim();
+
+	if (label.length > 0) {
+		return 'Favor preencher o campo ' + label.toLowerCase();
+	}
+
+	return 'Favor preencher um campo obrigatório';
+}
+
+function obterPrimeiroCampoInvalidoDocumento() {
+	var campo = $('#frm').find('.is-invalid').filter(function() {
+		return campoDeveAparecerNoResumoDocumento($(this));
+	}).first();
+
+	if (campo.length == 0) {
+		campo = $('#frm').find('.is-invalid').first();
+	}
+
+	return campo.length > 0 ? campo[0] : null;
+}
+
+function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
+	var elemento = obterPrimeiroCampoInvalidoDocumento();
+	var cabecalho = finalizar
+			? 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar e assinar:'
+			: 'Os seguintes campos obrigatórios precisam ser preenchidos antes de gravar:';
+	var msg = cabecalho + '\n\n- ' + mensagens.join('\n- ');
+
+	if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
+		var modal = sigaModal.alerta(msg);
+		if (modal && typeof modal.focus === 'function') {
+			modal.focus(elemento);
+		}
+	} else {
+		alert(msg);
+		if (elemento && typeof elemento.focus === 'function') {
+			elemento.focus();
+		}
+	}
+}
+
+function validarCamposObrigatoriosEditaDocumento() {
+	validarCampoObrigatorioDocumento('exDocumentoDTO.dtDocString', 'Favor preencher o campo data');
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Favor preencher o campo responsável pela assinatura');
+
+	if ($('#substitutoSwitch').is(':checked')) {
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla', 'Favor preencher o campo substituto do responsável pela assinatura');
+	} else {
+		removerErroCampoDocumento('exDocumentoDTO.titularSel.sigla');
+	}
+
+	validarDestinatarioObrigatorioDocumento();
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla', 'Favor preencher o campo classificação documental');
+	validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento', 'Favor preencher o campo assunto');
+	validarCamposRequiredDocumento();
+}
+
+function validarDestinatarioObrigatorioDocumento() {
+	var tipoDestinatario = $('[name="exDocumentoDTO.tipoDestinatario"]').val();
+
+	if (!tipoDestinatario) {
+		return;
+	}
+
+	if (tipoDestinatario == '1') {
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.destinatarioSel.sigla', 'Favor preencher o campo destinatário');
+	} else if (tipoDestinatario == '2') {
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Favor preencher o campo destinatário');
+	} else if (tipoDestinatario == '3') {
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Favor preencher o campo destinatário');
+	} else {
+		validarCampoObrigatorioDocumento('exDocumentoDTO.nmDestinatario', 'Favor preencher o campo destinatário');
+	}
+}
+
+function validarSelecaoObrigatoriaDocumento(nomeCampoSigla, mensagem) {
+	var elemento = $('[name="' + nomeCampoSigla + '"]').first();
+
+	if (elemento.length == 0 || !campoDeveSerValidadoDocumento(elemento)) {
+		return;
+	}
+
+	var nomeCampoId = nomeCampoSigla.replace('Sel.sigla', 'Sel.id');
+	var campoId = $('[name="' + nomeCampoId + '"]').first();
+	var valor = campoId.length > 0 ? campoId.val() : elemento.val();
+
+	validarValorObrigatorioDocumento(elemento, valor, mensagem);
+}
+
+function validarCampoObrigatorioDocumento(nomeCampo, mensagem) {
+	var elemento = $('[name="' + nomeCampo + '"]').first();
+
+	if (elemento.length == 0 || !campoDeveSerValidadoDocumento(elemento)) {
+		return;
+	}
+
+	validarValorObrigatorioDocumento(elemento, elemento.val(), mensagem);
+}
+
+function validarCamposRequiredDocumento() {
+	$('#frm').find('[required], [aria-required="true"]').each(function() {
+		var elemento = $(this);
+
+		if (!campoDeveSerValidadoDocumento(elemento)) {
+			return;
+		}
+
+		validarValorObrigatorioDocumento(elemento, elemento.val(), obterMensagemCampoInvalidoDocumento(elemento));
+	});
+}
+
+function campoDeveSerValidadoDocumento(elemento) {
+	return elemento
+			&& elemento.length > 0
+			&& !elemento.is(':disabled')
+			&& elemento.attr('type') !== 'hidden'
+			&& elemento.closest('[style*="display: none"], .d-none, [hidden]').length == 0;
+}
+
+function campoDeveAparecerNoResumoDocumento(elemento) {
+	return elemento
+			&& elemento.length > 0
+			&& elemento.attr('type') !== 'hidden'
+			&& elemento.closest('[style*="display: none"], .d-none, [hidden]').length == 0;
+}
+
+function removerErroCampoDocumento(nomeCampo) {
+	var elemento = $('[name="' + nomeCampo + '"]').first();
+
+	if (elemento.length > 0) {
+		removerErro(elemento);
+	}
+}
+
+function validarValorObrigatorioDocumento(elemento, valor, mensagem) {
+	if (valor == null || valor === '' || !valor || /^\s*$/.test(valor)) {
+		aplicarErro(elemento, mensagem);
+	} else {
+		removerErro(elemento);
+	}
 }
 
 function validarData(elemento) {
@@ -239,7 +416,16 @@ function removerLabelInvalido(elemento) {
 }
 
 function aplicarMensagemErro(elemento, mensagem) {
-	var mensagemDiv = $('.invalid-feedback-'.concat(elemento.attr('name')));
+	var mensagemDiv = obterMensagemDivErro(elemento);
+	if (mensagemDiv.length == 0) {
+		var nomeCampo = elemento.attr('name');
+		mensagemDiv = $('<div/>', {
+			'class': 'invalid-feedback invalid-feedback-' + normalizarNomeCampoDocumento(nomeCampo)
+		});
+		mensagemDiv.attr('data-campo-documento', nomeCampo);
+
+		elemento.closest('.form-group, .custom-file').append(mensagemDiv);
+	}
 	
 	if (mensagemDiv.length > 0) {
 		if (elemento[0].type === 'radio' || elemento[0].type === 'checkbox') {
@@ -249,6 +435,25 @@ function aplicarMensagemErro(elemento, mensagem) {
 			mensagemDiv.text(mensagem);
 		}				
 	}
+}
+
+function obterMensagemDivErro(elemento) {
+	var nomeCampo = elemento.attr('name');
+	var mensagemDiv = $('.invalid-feedback[data-campo-documento="' + nomeCampo + '"]');
+
+	if (mensagemDiv.length == 0) {
+		mensagemDiv = $('.invalid-feedback-' + normalizarNomeCampoDocumento(nomeCampo));
+	}
+
+	if (mensagemDiv.length == 0 && /^[A-Za-z0-9_-]+$/.test(nomeCampo)) {
+		mensagemDiv = $('.invalid-feedback-' + nomeCampo);
+	}
+
+	return mensagemDiv;
+}
+
+function normalizarNomeCampoDocumento(nomeCampo) {
+	return String(nomeCampo || '').replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
 function obterLabel(elemento) {
