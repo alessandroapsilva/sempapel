@@ -1691,6 +1691,7 @@ public class ExBL extends CpBL {
 
         boolean fPreviamenteAssinado = !doc.isPendenteDeAssinatura();
         boolean fPreviamenteAutenticado = doc.isAutenticadoENaoTemSubscritor();
+		final Date dtAssinatura = new Date();
 
 		if (!fPreviamenteAssinado) {
 			try {
@@ -1719,7 +1720,7 @@ public class ExBL extends CpBL {
 				envelopereq.setSignature(bluc.bytearray2b64(pkcs7));
 				envelopereq.setSha1(bluc.bytearray2b64(bluc.calcSha1(data)));
 				envelopereq.setSha256(bluc.bytearray2b64(bluc.calcSha256(data)));
-				envelopereq.setTime(dtMov != null ? dtMov : dao().consultarDataEHoraDoServidor());
+				envelopereq.setTime(dtAssinatura);
 				EnvelopeResponse enveloperesp = bluc.envelope(envelopereq);
 				if (enveloperesp.getErrormsg() != null)
 					throw new Exception("BluC não conseguiu produzir o envelope AD-RB. " + enveloperesp.getErrormsg());
@@ -1734,7 +1735,7 @@ public class ExBL extends CpBL {
 			validatereq.setEnvelope(bluc.bytearray2b64(cms));
 			validatereq.setSha1(bluc.bytearray2b64(bluc.calcSha1(data)));
 			validatereq.setSha256(bluc.bytearray2b64(bluc.calcSha256(data)));
-			validatereq.setTime(dtMov);
+			validatereq.setTime(dtAssinatura);
 			validatereq.setCrl("true");
 			ValidateResponse validateresp = assertValid(bluc, validatereq);
 
@@ -1872,7 +1873,6 @@ public class ExBL extends CpBL {
 		}
 
 		String s = null;
-		final Date dtAssinatura = new Date();
 		DpPessoa assinante = calculaAssinanteCriaMovAssinadoPor(cadastrante, lotaCadastrante, doc, dtAssinatura, titular,
 				cadastrante, cosignatario, fSubstituindoSubscritor, fSubstituindoCosignatario);
 		
