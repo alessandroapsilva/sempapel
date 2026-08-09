@@ -129,7 +129,7 @@ function obterMensagensCamposInvalidosDocumento() {
 }
 
 function obterMensagemCampoInvalidoDocumento(elemento) {
-	var mensagem = elemento.closest('.form-group, .custom-file, .row').find('.invalid-feedback').filter(function() {
+	var mensagem = obterMensagemDivErro(elemento).filter(function() {
 		return $(this).text().trim().length > 0;
 	}).first().text().trim();
 
@@ -137,12 +137,10 @@ function obterMensagemCampoInvalidoDocumento(elemento) {
 		return mensagem;
 	}
 
-	var tituloLabel = obterLabel(elemento);
-	var label = tituloLabel && tituloLabel.length > 0 ? tituloLabel.text().trim() : '';
-	label = label.replace(/\*/g, '').replace(':', ' ').replace(/\s+/g, ' ').trim();
+	var label = obterNomeCampoDocumento(elemento);
 
 	if (label.length > 0) {
-		return 'Favor preencher o campo ' + label.toLowerCase();
+		return 'Favor preencher o campo ' + label;
 	}
 
 	return 'Favor preencher um campo obrigatório';
@@ -235,7 +233,7 @@ function validarCampoObrigatorioDocumento(nomeCampo, mensagem) {
 		return;
 	}
 
-	validarValorObrigatorioDocumento(elemento, elemento.val(), mensagem);
+	validarValorObrigatorioDocumento(elemento, elemento.val(), mensagem || montarMensagemCampoObrigatorioDocumento(elemento));
 }
 
 function validarCamposRequiredDocumento() {
@@ -246,7 +244,7 @@ function validarCamposRequiredDocumento() {
 			return;
 		}
 
-		validarValorObrigatorioDocumento(elemento, elemento.val(), obterMensagemCampoInvalidoDocumento(elemento));
+		validarValorObrigatorioDocumento(elemento, elemento.val(), montarMensagemCampoObrigatorioDocumento(elemento));
 	});
 }
 
@@ -275,10 +273,20 @@ function removerErroCampoDocumento(nomeCampo) {
 
 function validarValorObrigatorioDocumento(elemento, valor, mensagem) {
 	if (valor == null || valor === '' || !valor || /^\s*$/.test(valor)) {
-		aplicarErro(elemento, mensagem);
+		aplicarErro(elemento, mensagem || montarMensagemCampoObrigatorioDocumento(elemento));
 	} else {
 		removerErro(elemento);
 	}
+}
+
+function montarMensagemCampoObrigatorioDocumento(elemento) {
+	var nomeCampo = obterNomeCampoDocumento(elemento);
+
+	if (nomeCampo.length > 0) {
+		return 'Favor preencher o campo ' + nomeCampo;
+	}
+
+	return 'Favor preencher um campo obrigatório';
 }
 
 function validarData(elemento) {
@@ -456,12 +464,65 @@ function normalizarNomeCampoDocumento(nomeCampo) {
 	return String(nomeCampo || '').replace(/[^A-Za-z0-9_-]/g, '_');
 }
 
+function obterNomeCampoDocumento(elemento) {
+	var label = '';
+	var tituloLabel = obterLabel(elemento);
+
+	if (tituloLabel && tituloLabel.length > 0) {
+		label = tituloLabel.clone().children().remove().end().text();
+	}
+
+	if (!label) {
+		label = elemento.attr('aria-label')
+				|| elemento.attr('title')
+				|| elemento.attr('placeholder')
+				|| elemento.data('nome')
+				|| elemento.data('label')
+				|| '';
+	}
+
+	if (!label) {
+		var nomeCampo = elemento.attr('name') || '';
+		label = nomeCampo.replace(/^exDocumentoDTO\./, '')
+				.replace(/Sel\.sigla$/, '')
+				.replace(/([A-Z])/g, ' $1')
+				.replace(/\./g, ' ');
+	}
+
+	return limparNomeCampoDocumento(label);
+}
+
+function limparNomeCampoDocumento(label) {
+	return String(label || '')
+			.replace(/\*/g, '')
+			.replace(/\(obrigatório\)/ig, '')
+			.replace(/:/g, '')
+			.replace(/\s+/g, ' ')
+			.trim()
+			.toLowerCase();
+}
+
 function obterLabel(elemento) {
 	var elementoName = elemento.attr('name');
-	if (!elementoName) return;
+	if (!elementoName) return $();
 	var fieldName = elementoName.replace(/_[A-Za-z0-9_]+Sel\.sigla$/, "");
-	var tituloLabel = $('label[for="' + fieldName + '"]');
+	var elementoId = elemento.attr('id');
+	var tituloLabel = elementoId ? $('label[for="' + elementoId + '"]') : $();
 	
+	if (tituloLabel.length == 0) {
+		tituloLabel = $('label[for="' + fieldName + '"]');
+	}
+
+	if (tituloLabel.length == 0) {
+		tituloLabel = $('[data-nome-ref="' + elementoName + '"]');
+	}
+
+	if (tituloLabel.length == 0) {
+		tituloLabel = elemento.closest('.form-group, .row, .form-row').find('label, .control-label, .col-form-label, span, b').filter(function() {
+			return limparNomeCampoDocumento($(this).text()).length > 0;
+		}).first();
+	}
+
 	if (tituloLabel.length == 0) {
 		var tag = elemento.parent().prev();		
 		

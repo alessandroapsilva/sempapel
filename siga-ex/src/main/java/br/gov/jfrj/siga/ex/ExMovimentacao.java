@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.persistence.Entity;
@@ -84,6 +85,8 @@ import br.gov.jfrj.siga.ex.util.PublicacaoDJEBL;
 @Table(name = "siga.ex_movimentacao")
 public class ExMovimentacao extends AbstractExMovimentacao implements
 		Serializable, Comparable<ExMovimentacao> {
+
+	private static final TimeZone TIMEZONE_PADRAO = TimeZone.getTimeZone("America/Sao_Paulo");
 
 	public final static ITipoDeMovimentacao[] tpMovimentacoesDePosse = new ITipoDeMovimentacao[] {ExTipoDeMovimentacao.CRIACAO, 
 			ExTipoDeMovimentacao.TRANSFERENCIA,
@@ -193,24 +196,21 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtMovDDMMYY() {
 		if (getDtMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
-			return df.format(getDtMov());
+			return formatarData(getDtMov(), "dd/MM/yy");
 		}
 		return "";
 	}
 
 	public String getDtMovDDMMYYYY() {
 		if (getDtMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-			return df.format(getDtMov());
+			return formatarData(getDtMov(), "dd/MM/yyyy");
 		}
 		return "";
 	}
 
 	public String getDtMovYYYYMMDD() {
 		if (getDtMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-			return df.format(getDtMov());
+			return formatarData(getDtMov(), "yyyy-MM-dd");
 		}
 		return "";
 	}
@@ -225,8 +225,7 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtRegMovDDMMYY() {
 		if (getDtIniMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
-			return df.format(getDtIniMov());
+			return formatarData(getDtIniMov(), "dd/MM/yy");
 		}
 		return "";
 	}
@@ -241,9 +240,7 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtRegMovDDMMYYHHMMSS() {
 		if (getDtIniMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat(
-					"dd/MM/yy HH:mm:ss");
-			return df.format(getDtIniMov());
+			return formatarData(getDtIniMov(), "dd/MM/yy HH:mm:ss");
 		}
 		return "";
 	}
@@ -258,9 +255,7 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtRegMovDDMMYYYYHHMMSS() {
 		if (getDtIniMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat(
-					"dd/MM/yyyy HH:mm:ss");
-			return df.format(getDtIniMov());
+			return formatarData(getDtIniMov(), "dd/MM/yyyy HH:mm:ss");
 		}
 		return "";
 	}
@@ -275,8 +270,7 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtFimMovDDMMYY() {
 		if (getDtFimMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
-			return df.format(getDtFimMov());
+			return formatarData(getDtFimMov(), "dd/MM/yy");
 		}
 		return "";
 	}
@@ -291,11 +285,15 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtFimMovDDMMYYHHMMSS() {
 		if (getDtFimMov() != null) {
-			final SimpleDateFormat df = new SimpleDateFormat(
-					"dd/MM/yy HH:mm:ss");
-			return df.format(getDtFimMov());
+			return formatarData(getDtFimMov(), "dd/MM/yy HH:mm:ss");
 		}
 		return "";
+	}
+
+	private String formatarData(Date data, String formato) {
+		final SimpleDateFormat df = new SimpleDateFormat(formato);
+		df.setTimeZone(TIMEZONE_PADRAO);
+		return df.format(data);
 	}
 
 	/**
@@ -307,6 +305,7 @@ public class ExMovimentacao extends AbstractExMovimentacao implements
 	 */
 	public String getDtExtenso() {
         SimpleDateFormat df1 = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy.", new Locale("pt", "BR"));
+		df1.setTimeZone(TIMEZONE_PADRAO);
 		try {
 			String s = getNmLocalidade();
 

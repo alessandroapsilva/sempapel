@@ -89,6 +89,7 @@ public class Data {
 	public static String formatDDMMYY(Date dt) {
 		if (dt != null) {
 			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
+			df.setTimeZone(TIMEZONE_PADRAO);
 			return df.format(dt);
 		}
 		return null;
@@ -97,6 +98,7 @@ public class Data {
 	public static String formatDDMMYYYY(Date dt) {
 		if (dt != null) {
 			final SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+			df.setTimeZone(TIMEZONE_PADRAO);
 			return df.format(dt);
 		}
 		return null;
