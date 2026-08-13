@@ -43,7 +43,7 @@
     }
 
     function addMissing(list, el, fallback) {
-        var name = fieldName(el, fallback);
+        var name = fallback || fieldName(el, fallback);
         if (name && list.indexOf(name) < 0) list.push(name);
         if (el) $(el).addClass('is-invalid');
     }
@@ -102,10 +102,15 @@
 
         var tipoDest = byName('exDocumentoDTO.tipoDestinatario');
         if (tipoDest && visible(tipoDest)) {
-            if (String(tipoDest.value) === '1') validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário');
-            else if (String(tipoDest.value) === '2') validateSelection(missing, 'exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Destinatário');
-            else if (String(tipoDest.value) === '3') validateSelection(missing, 'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Destinatário');
-            else validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário');
+            if (String(tipoDest.value) === '1') {
+                validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário - Pessoa');
+            } else if (String(tipoDest.value) === '2') {
+                validateSelection(missing, 'exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Destinatário - Lotação');
+            } else if (String(tipoDest.value) === '3') {
+                validateSelection(missing, 'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Destinatário - Órgão Externo');
+            } else {
+                validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário');
+            }
         }
 
         validateSelection(missing, 'exDocumentoDTO.classificacaoSel.sigla', 'Classificação Documental');
@@ -136,9 +141,14 @@
         return missing;
     }
 
-    function showRequiredModal(fields) {
+    function showRequiredModal(fields, finalizar) {
         if (!fields || !fields.length) return;
-        var msg = fields.join('\n');
+
+        /* Igual ao PBdoc: mostra o primeiro campo pendente com frase completa. */
+        var nomeCampo = fields[0];
+        var acao = finalizar ? 'finalizar e assinar o documento' : 'gravar o documento';
+        var msg = "Preencha o campo '" + nomeCampo + "' antes de " + acao + ".";
+
         var first = $('#frm .is-invalid:visible').first()[0] || null;
         if (window.sigaModal && typeof window.sigaModal.alerta === 'function') {
             var modal = window.sigaModal.alerta(msg);
@@ -188,7 +198,7 @@
 
             var missing = collectMissingFields();
             if (missing.length) {
-                showRequiredModal(missing);
+                showRequiredModal(missing, finalizar);
                 if (typeof window.triggerAutoSave === 'function') window.triggerAutoSave();
                 return false;
             }
@@ -216,6 +226,19 @@
 
     window.gravarDoc = function() { return submitDocument(false); };
     window.gravarAssinarDoc = function() { return submitDocument(true); };
+
+    /* Compatibilidade com a validacao original: qualquer chamada ao resumo usa o mesmo modal PBdoc. */
+    window.exibirModalCamposObrigatoriosDocumento = function(mensagens, finalizar) {
+        var nomes = [];
+        (mensagens || []).forEach(function(mensagem) {
+            var nome = clean(String(mensagem || '')
+                .replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
+                .replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
+                .replace(/[.'\"]+$/g, ''));
+            if (nome && nomes.indexOf(nome) < 0) nomes.push(nome);
+        });
+        showRequiredModal(nomes.length ? nomes : collectMissingFields(), !!finalizar);
+    };
 
     function install() {
         var frm = form();
