@@ -18,6 +18,110 @@
             .trim();
     }
 
+    function getQueryParam(name) {
+        try {
+            return new URL(window.location.href).searchParams.get(name) || '';
+        } catch (e) {
+            var m = new RegExp('[?&]' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '=([^&#]*)').exec(window.location.search);
+            return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+        }
+    }
+
+    function ensureHidden(frm, name, value) {
+        if (!frm || !value) return null;
+        var el = byName(name);
+        if (!el) {
+            el = document.createElement('input');
+            el.type = 'hidden';
+            el.name = name;
+            frm.appendChild(el);
+        }
+        el.value = value;
+        return el;
+    }
+
+    /*
+     * Inclusão de documento filho: preserva a sigla do documento pai recebida
+     * pela URL. O fluxo legado consulta exDocumentoDTO.mobilPaiSel.sigla no
+     * JavaScript, enquanto a navegação chega normalmente como mobilPaiSel.sigla.
+     */
+    function preserveParentContext() {
+        var frm = form();
+        if (!frm) return '';
+
+        var existing = byName('exDocumentoDTO.mobilPaiSel.sigla');
+        var siglaPai = existing && existing.value ? existing.value : '';
+        if (!siglaPai) siglaPai = getQueryParam('mobilPaiSel.sigla');
+        if (!siglaPai) siglaPai = getQueryParam('exDocumentoDTO.mobilPaiSel.sigla');
+
+        if (siglaPai) {
+            ensureHidden(frm, 'exDocumentoDTO.mobilPaiSel.sigla', siglaPai);
+            ensureHidden(frm, 'mobilPaiSel.sigla', siglaPai);
+        }
+        return siglaPai;
+    }
+
+    /*
+     * Adaptação do carregamento de modelos inspirada no PBdoc: o spinner fica
+     * restrito ao seletor de Modelo, o contexto do pai é sempre enviado e a
+     * requisição possui timeout/complete para nunca deixar "Carregando..."
+     * preso indefinidamente.
+     */
+    function installModelLoader() {
+        if (typeof window.carregaModelos !== 'function' || !$ || !$.ajax) return;
+
+        window.getListaModelos = function() {
+            var siglaPai = preserveParentContext();
+            var idModEl = byName('exDocumentoDTO.idMod');
+            var isEditandoAnexoEl = byName('exDocumentoDTO.criandoAnexo');
+            var isCriandoSubprocessoEl = byName('exDocumentoDTO.criandoSubprocesso');
+            var isAutuandoEl = byName('exDocumentoDTO.autuando');
+            var isEditandoAnexo = !!(isEditandoAnexoEl && isEditandoAnexoEl.value === 'true');
+            var isCriandoSubprocesso = !!(isCriandoSubprocessoEl && isCriandoSubprocessoEl.value === 'true');
+            var isAutuando = !!(isAutuandoEl && isAutuandoEl.value === 'true');
+            var ulMod = $('#ulmod');
+            var selected = $('#modelos-select .selected-label');
+
+            ulMod.empty();
+            selected.empty().append('<span id="select-spinner" class="spinner-border spinner-border-sm text-secondary" role="status" aria-hidden="true"></span><span class="disabled ml-2">Carregando...</span>');
+
+            var parts = [];
+            if (isEditandoAnexo) parts.push('isEditandoAnexo=true');
+            if (isCriandoSubprocesso) parts.push('isCriandoSubprocesso=true');
+            if (isAutuando) parts.push('isAutuando=true');
+            if (siglaPai) parts.push('siglaMobPai=' + encodeURIComponent(siglaPai));
+            if (idModEl && idModEl.value) parts.push('idMod=' + encodeURIComponent(idModEl.value));
+            var qry = parts.join('&');
+
+            $.ajax({
+                url: '/sigaex/api/v1/modelos/lista-hierarquica' + (qry ? '?' + qry : ''),
+                contentType: 'application/json',
+                dataType: 'json',
+                timeout: 15000,
+                success: function(result) {
+                    if (result && result.list && result.list.length > 0) {
+                        try {
+                            if (typeof window.setUserSessionStorage === 'function') {
+                                window.setUserSessionStorage('lastQry', qry);
+                                window.setUserSessionStorage('modelos', JSON.stringify(result.list));
+                            }
+                        } catch (e) {}
+                        window.carregaModelos(ulMod, result.list);
+                    } else {
+                        selected.html('&nbsp;');
+                    }
+                },
+                error: function() {
+                    selected.html('&nbsp;');
+                },
+                complete: function() {
+                    $('#select-spinner').remove();
+                    selected.find('.disabled').remove();
+                }
+            });
+        };
+    }
+
     function visible(el) {
         if (!el || $(el).is(':disabled')) return false;
         if ($(el).closest('.d-none,[hidden]').length) return false;
@@ -67,19 +171,11 @@
 
     function runSigaFieldValidation() {
         try {
-            if (typeof window.validarCamposObrigatoriosEditaDocumento === 'function') {
-                window.validarCamposObrigatoriosEditaDocumento();
-            }
-        } catch (e) {
-            console.error(e);
-        }
+            if (typeof window.validarCamposObrigatoriosEditaDocumento === 'function') window.validarCamposObrigatoriosEditaDocumento();
+        } catch (e) { console.error(e); }
         try {
-            if (typeof window.validarCamposEntrevista === 'function') {
-                window.validarCamposEntrevista();
-            }
-        } catch (e) {
-            console.error(e);
-        }
+            if (typeof window.validarCamposEntrevista === 'function') window.validarCamposEntrevista();
+        } catch (e) { console.error(e); }
     }
 
     function collectMissingFields() {
@@ -94,23 +190,15 @@
         validateSelection(missing, 'exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');
 
         var substituto = document.getElementById('substitutoSwitch') || byName('exDocumentoDTO.substituicao');
-        if (substituto && substituto.checked) {
-            validateSelection(missing, 'exDocumentoDTO.titularSel.sigla', 'Titular');
-        } else {
-            clearInvalid(byName('exDocumentoDTO.titularSel.sigla'));
-        }
+        if (substituto && substituto.checked) validateSelection(missing, 'exDocumentoDTO.titularSel.sigla', 'Titular');
+        else clearInvalid(byName('exDocumentoDTO.titularSel.sigla'));
 
         var tipoDest = byName('exDocumentoDTO.tipoDestinatario');
         if (tipoDest && visible(tipoDest)) {
-            if (String(tipoDest.value) === '1') {
-                validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário - Pessoa');
-            } else if (String(tipoDest.value) === '2') {
-                validateSelection(missing, 'exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Destinatário - Lotação');
-            } else if (String(tipoDest.value) === '3') {
-                validateSelection(missing, 'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Destinatário - Órgão Externo');
-            } else {
-                validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário');
-            }
+            if (String(tipoDest.value) === '1') validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário - Pessoa');
+            else if (String(tipoDest.value) === '2') validateSelection(missing, 'exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Destinatário - Lotação');
+            else if (String(tipoDest.value) === '3') validateSelection(missing, 'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Destinatário - Órgão Externo');
+            else validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário');
         }
 
         validateSelection(missing, 'exDocumentoDTO.classificacaoSel.sigla', 'Classificação Documental');
@@ -125,60 +213,45 @@
         }
 
         var cossignatarios = document.getElementById('cossignatariosSwitch');
-        if (cossignatarios && cossignatarios.checked) {
-            validateSelection(missing, 'exDocumentoDTO.cosignatarioSel.sigla', 'Outros Assinantes / Cossignatários');
-        }
+        if (cossignatarios && cossignatarios.checked) validateSelection(missing, 'exDocumentoDTO.cosignatarioSel.sigla', 'Outros Assinantes / Cossignatários');
 
         $('#frm').find('[required],[aria-required="true"]').each(function() {
             if (this.type === 'hidden' || !visible(this)) return;
             if ((this.type === 'checkbox' || this.type === 'radio')) {
                 if (!$('[name="' + this.name + '"]:checked').length) addMissing(missing, this);
-            } else if (!String($(this).val() || '').trim()) {
-                addMissing(missing, this);
-            }
+            } else if (!String($(this).val() || '').trim()) addMissing(missing, this);
         });
-
         return missing;
     }
 
-    function showRequiredModal(fields, finalizar) {
+    function showRequiredModal(fields) {
         if (!fields || !fields.length) return;
-
-        /* Igual ao PBdoc: mostra o primeiro campo pendente com frase completa. */
         var nomeCampo = fields[0];
-        var acao = finalizar ? 'finalizar e assinar o documento' : 'gravar o documento';
-        var msg = "Preencha o campo '" + nomeCampo + "' antes de " + acao + ".";
-
         var first = $('#frm .is-invalid:visible').first()[0] || null;
         if (window.sigaModal && typeof window.sigaModal.alerta === 'function') {
-            var modal = window.sigaModal.alerta(msg);
+            var modal = window.sigaModal.alerta(nomeCampo);
             if (modal && typeof modal.focus === 'function') modal.focus(first);
         } else {
-            window.alert(msg);
+            window.alert(nomeCampo);
             if (first && first.focus) first.focus();
         }
     }
 
     function hideSpinner() {
-        try {
-            if (window.sigaSpinner && window.sigaSpinner.ocultar) window.sigaSpinner.ocultar();
-        } catch (e) {}
+        try { if (window.sigaSpinner && window.sigaSpinner.ocultar) window.sigaSpinner.ocultar(); } catch (e) {}
     }
 
     function showSpinner() {
-        try {
-            if (window.sigaSpinner && window.sigaSpinner.mostrar) window.sigaSpinner.mostrar();
-        } catch (e) {}
+        try { if (window.sigaSpinner && window.sigaSpinner.mostrar) window.sigaSpinner.mostrar(); } catch (e) {}
     }
 
     function syncEditor() {
         if (window.CKEDITOR && window.CKEDITOR.instances) {
-            Object.keys(window.CKEDITOR.instances).forEach(function(key) {
-                window.CKEDITOR.instances[key].updateElement();
-            });
+            Object.keys(window.CKEDITOR.instances).forEach(function(key) { window.CKEDITOR.instances[key].updateElement(); });
         }
         if (typeof window.onSave === 'function') window.onSave();
         if (typeof window.personalizacaoJuntar === 'function') window.personalizacaoJuntar();
+        preserveParentContext();
     }
 
     function nativeSubmit(frm) {
@@ -190,29 +263,23 @@
     function submitDocument(finalizar) {
         var frm = form();
         if (!frm) return false;
-
         hideSpinner();
         try {
             if (typeof window.saveTimer !== 'undefined') clearTimeout(window.saveTimer);
             syncEditor();
-
             var missing = collectMissingFields();
             if (missing.length) {
-                showRequiredModal(missing, finalizar);
+                showRequiredModal(missing);
                 if (typeof window.triggerAutoSave === 'function') window.triggerAutoSave();
                 return false;
             }
-
             var assinar = document.getElementById('gravarAssinar');
             var fechar = document.getElementById('fecharDoc');
             if (assinar) assinar.value = finalizar ? 'true' : 'false';
             if (fechar) fechar.value = finalizar ? 'true' : 'false';
-
             frm.action = 'gravar';
-
             var button = document.getElementById(finalizar ? 'btnFinalizarAssinar' : 'btnGravar');
             if (button) button.disabled = true;
-
             if (finalizar) showSpinner();
             nativeSubmit(frm);
         } catch (e) {
@@ -227,8 +294,7 @@
     window.gravarDoc = function() { return submitDocument(false); };
     window.gravarAssinarDoc = function() { return submitDocument(true); };
 
-    /* Compatibilidade com a validacao original: qualquer chamada ao resumo usa o mesmo modal PBdoc. */
-    window.exibirModalCamposObrigatoriosDocumento = function(mensagens, finalizar) {
+    window.exibirModalCamposObrigatoriosDocumento = function(mensagens) {
         var nomes = [];
         (mensagens || []).forEach(function(mensagem) {
             var nome = clean(String(mensagem || '')
@@ -237,33 +303,43 @@
                 .replace(/[.'\"]+$/g, ''));
             if (nome && nomes.indexOf(nome) < 0) nomes.push(nome);
         });
-        showRequiredModal(nomes.length ? nomes : collectMissingFields(), !!finalizar);
+        showRequiredModal(nomes.length ? nomes : collectMissingFields());
     };
+
+    function stylePbdocButtons() {
+        var gravar = document.getElementById('btnGravar');
+        if (gravar) {
+            gravar.className = 'btn btn-primary';
+            gravar.style.minWidth = '';
+            gravar.style.height = '';
+            gravar.style.borderRadius = '';
+        }
+        var finalizar = document.getElementById('btnFinalizarAssinar');
+        if (finalizar) {
+            finalizar.className = 'btn btn-success ml-1';
+            finalizar.style.minWidth = '';
+            finalizar.style.height = '';
+            finalizar.style.borderRadius = '';
+        }
+    }
 
     function install() {
         var frm = form();
         if (frm) window.frm = frm;
+        preserveParentContext();
+        stylePbdocButtons();
 
         var gravar = document.getElementById('btnGravar');
-        if (gravar) {
-            gravar.onclick = function(e) {
-                if (e) e.preventDefault();
-                return submitDocument(false);
-            };
-        }
+        if (gravar) gravar.onclick = function(e) { if (e) e.preventDefault(); return submitDocument(false); };
 
         var finalizar = document.getElementById('btnFinalizarAssinar');
-        if (finalizar) {
-            finalizar.onclick = function(e) {
-                if (e) e.preventDefault();
-                return submitDocument(true);
-            };
-        }
+        if (finalizar) finalizar.onclick = function(e) { if (e) e.preventDefault(); return submitDocument(true); };
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', install);
-    } else {
-        install();
-    }
+    /* Executa antes do document.ready do edita.jsp. */
+    preserveParentContext();
+    installModelLoader();
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
+    else install();
 })(window, document, window.jQuery);
