@@ -350,12 +350,61 @@
         }
     }
 
+    function installExibeActions() {
+        if (window.location.pathname.indexOf('/app/expediente/doc/exibir') < 0) return;
+
+        /* Remove somente o Voltar do cabeçalho do exibe.jsp. */
+        var voltarCabecalho = document.querySelector('#page h2 button[name="voltar"], #page h2.sigla-documento button[name="voltar"]');
+        if (voltarCabecalho) voltarCabecalho.parentNode.removeChild(voltarCabecalho);
+
+        /*
+         * O PBdoc já entrega Anexar pelas ações permitidas do móbil. Em vez de
+         * inventar uma rota e furar a regra de negócio, reaproveitamos exatamente
+         * a ação autorizada e apenas a promovemos para um botão visível.
+         */
+        var menus = document.querySelectorAll('.siga-menu-acoes');
+        for (var i = 0; i < menus.length; i++) {
+            var menu = menus[i];
+            if (menu.querySelector('.enfas-btn-anexar')) continue;
+
+            var links = menu.querySelectorAll('a[href]');
+            var anexarOriginal = null;
+            for (var j = 0; j < links.length; j++) {
+                var href = links[j].getAttribute('href') || '';
+                var texto = clean(links[j].textContent || '');
+                if (href.indexOf('/app/expediente/mov/anexar') >= 0 || /^Anexar$/i.test(texto)) {
+                    anexarOriginal = links[j];
+                    break;
+                }
+            }
+
+            if (!anexarOriginal) continue;
+
+            var botao = document.createElement('a');
+            botao.className = 'btn btn-primary btn-sm enfas-btn-anexar mr-2 mb-2';
+            botao.href = anexarOriginal.href;
+            botao.title = anexarOriginal.title || 'Anexar documento';
+            botao.innerHTML = '<u>A</u>nexar';
+
+            var col = menu.querySelector('.col') || menu;
+            var referencia = col.querySelector('h3');
+            if (referencia && referencia.nextSibling) col.insertBefore(botao, referencia.nextSibling);
+            else col.insertBefore(botao, col.firstChild);
+
+            /* Evita exibir a mesma ação duas vezes. */
+            var li = anexarOriginal.closest ? anexarOriginal.closest('li') : null;
+            if (li) li.style.display = 'none';
+            else anexarOriginal.style.display = 'none';
+        }
+    }
+
     function install() {
         var frm = form();
         if (frm) window.frm = frm;
 
         preserveParentContext();
         styleButtonsLikePBdoc();
+        installExibeActions();
 
         var gravar = document.getElementById('btnGravar');
         if (gravar) gravar.onclick = function(e) { if (e) e.preventDefault(); return submitDocument(false); };
