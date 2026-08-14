@@ -40,11 +40,6 @@
         return el;
     }
 
-    /*
-     * Inclusão de documento filho: preserva a sigla do documento pai recebida
-     * pela URL. O fluxo legado consulta exDocumentoDTO.mobilPaiSel.sigla no
-     * JavaScript, enquanto a navegação chega normalmente como mobilPaiSel.sigla.
-     */
     function preserveParentContext() {
         var frm = form();
         if (!frm) return '';
@@ -61,12 +56,6 @@
         return siglaPai;
     }
 
-    /*
-     * Adaptação do carregamento de modelos inspirada no PBdoc: o spinner fica
-     * restrito ao seletor de Modelo, o contexto do pai é sempre enviado e a
-     * requisição possui timeout/complete para nunca deixar "Carregando..."
-     * preso indefinidamente.
-     */
     function installModelLoader() {
         if (typeof window.carregaModelos !== 'function' || !$ || !$.ajax) return;
 
@@ -190,18 +179,21 @@
         validateSelection(missing, 'exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');
 
         var substituto = document.getElementById('substitutoSwitch') || byName('exDocumentoDTO.substituicao');
-        if (substituto && substituto.checked) validateSelection(missing, 'exDocumentoDTO.titularSel.sigla', 'Titular');
-        else clearInvalid(byName('exDocumentoDTO.titularSel.sigla'));
+        if (substituto && substituto.checked) {
+            validateSelection(missing, 'exDocumentoDTO.titularSel.sigla', 'Substituto Responsável pela Assinatura');
+        } else {
+            clearInvalid(byName('exDocumentoDTO.titularSel.sigla'));
+        }
 
         var tipoDest = byName('exDocumentoDTO.tipoDestinatario');
         if (tipoDest && visible(tipoDest)) {
-            if (String(tipoDest.value) === '1') validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário - Pessoa');
+            if (String(tipoDest.value) === '1') validateSelection(missing, 'exDocumentoDTO.destinatarioSel.sigla', 'Destinatário - Usuário');
             else if (String(tipoDest.value) === '2') validateSelection(missing, 'exDocumentoDTO.lotacaoDestinatarioSel.sigla', 'Destinatário - Lotação');
             else if (String(tipoDest.value) === '3') validateSelection(missing, 'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla', 'Destinatário - Órgão Externo');
-            else validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário');
+            else validateInput(missing, byName('exDocumentoDTO.nmDestinatario'), 'Destinatário - Campo Livre');
         }
 
-        validateSelection(missing, 'exDocumentoDTO.classificacaoSel.sigla', 'Classificação Documental');
+        validateSelection(missing, 'exDocumentoDTO.classificacaoSel.sigla', 'Tipo Documental');
         validateInput(missing, byName('exDocumentoDTO.descrDocumento'), 'Assunto');
 
         var personalizar = document.getElementById('personalizacaoSwitch') || byName('exDocumentoDTO.personalizacao');
@@ -213,26 +205,33 @@
         }
 
         var cossignatarios = document.getElementById('cossignatariosSwitch');
-        if (cossignatarios && cossignatarios.checked) validateSelection(missing, 'exDocumentoDTO.cosignatarioSel.sigla', 'Outros Assinantes / Cossignatários');
+        if (cossignatarios && cossignatarios.checked) {
+            validateSelection(missing, 'exDocumentoDTO.cosignatarioSel.sigla', 'Outros Assinantes / Cossignatários');
+        }
 
         $('#frm').find('[required],[aria-required="true"]').each(function() {
             if (this.type === 'hidden' || !visible(this)) return;
             if ((this.type === 'checkbox' || this.type === 'radio')) {
                 if (!$('[name="' + this.name + '"]:checked').length) addMissing(missing, this);
-            } else if (!String($(this).val() || '').trim()) addMissing(missing, this);
+            } else if (!String($(this).val() || '').trim()) {
+                addMissing(missing, this);
+            }
         });
         return missing;
     }
 
     function showRequiredModal(fields) {
         if (!fields || !fields.length) return;
+
         var nomeCampo = fields[0];
+        var msg = "Preencha o campo '" + nomeCampo + "' antes de gravar o documento.";
         var first = $('#frm .is-invalid:visible').first()[0] || null;
+
         if (window.sigaModal && typeof window.sigaModal.alerta === 'function') {
-            var modal = window.sigaModal.alerta(nomeCampo);
+            var modal = window.sigaModal.alerta(msg);
             if (modal && typeof modal.focus === 'function') modal.focus(first);
         } else {
-            window.alert(nomeCampo);
+            window.alert(msg);
             if (first && first.focus) first.focus();
         }
     }
@@ -264,22 +263,27 @@
         var frm = form();
         if (!frm) return false;
         hideSpinner();
+
         try {
             if (typeof window.saveTimer !== 'undefined') clearTimeout(window.saveTimer);
             syncEditor();
+
             var missing = collectMissingFields();
             if (missing.length) {
                 showRequiredModal(missing);
                 if (typeof window.triggerAutoSave === 'function') window.triggerAutoSave();
                 return false;
             }
+
             var assinar = document.getElementById('gravarAssinar');
             var fechar = document.getElementById('fecharDoc');
             if (assinar) assinar.value = finalizar ? 'true' : 'false';
             if (fechar) fechar.value = finalizar ? 'true' : 'false';
+
             frm.action = 'gravar';
             var button = document.getElementById(finalizar ? 'btnFinalizarAssinar' : 'btnGravar');
             if (button) button.disabled = true;
+
             if (finalizar) showSpinner();
             nativeSubmit(frm);
         } catch (e) {
@@ -300,34 +304,58 @@
             var nome = clean(String(mensagem || '')
                 .replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
                 .replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
+                .replace(/\s+antes\s+de\s+gravar\s+o\s+documento\.?$/i, '')
                 .replace(/[.'\"]+$/g, ''));
             if (nome && nomes.indexOf(nome) < 0) nomes.push(nome);
         });
         showRequiredModal(nomes.length ? nomes : collectMissingFields());
     };
 
-    function stylePbdocButtons() {
+    function styleButtonsLikePBdoc() {
         var gravar = document.getElementById('btnGravar');
         if (gravar) {
             gravar.className = 'btn btn-primary';
-            gravar.style.minWidth = '';
-            gravar.style.height = '';
-            gravar.style.borderRadius = '';
+            gravar.innerHTML = '<u>G</u>ravar';
+            gravar.title = 'Apenas grava o documento podendo continuar a Edição';
+            gravar.style.cssText = '';
         }
+
         var finalizar = document.getElementById('btnFinalizarAssinar');
         if (finalizar) {
-            finalizar.className = 'btn btn-success ml-1';
-            finalizar.style.minWidth = '';
-            finalizar.style.height = '';
-            finalizar.style.borderRadius = '';
+            finalizar.className = 'btn btn-primary';
+            finalizar.innerHTML = '<u>F</u>inalizar e Assinar';
+            finalizar.title = 'Finalizar documento em definitivo e em seguida realizar assinatura digital';
+            finalizar.style.cssText = '';
+        }
+
+        var verDoc = document.querySelector('button[name="ver_doc"]');
+        if (verDoc) {
+            verDoc.className = 'btn btn-info';
+            verDoc.innerHTML = '<u>V</u>er Documento';
+            verDoc.style.cssText = '';
+        }
+
+        var verPdf = document.querySelector('button[name="ver_doc_pdf"]');
+        if (verPdf) {
+            verPdf.className = 'btn btn-info';
+            verPdf.innerHTML = 'Ver <u>I</u>mpressão';
+            verPdf.style.cssText = '';
+        }
+
+        var voltar = document.querySelector('button[name="voltar"]');
+        if (voltar) {
+            voltar.className = 'btn btn-info';
+            voltar.innerHTML = 'Volta<u>r</u>';
+            voltar.style.cssText = '';
         }
     }
 
     function install() {
         var frm = form();
         if (frm) window.frm = frm;
+
         preserveParentContext();
-        stylePbdocButtons();
+        styleButtonsLikePBdoc();
 
         var gravar = document.getElementById('btnGravar');
         if (gravar) gravar.onclick = function(e) { if (e) e.preventDefault(); return submitDocument(false); };
@@ -336,7 +364,6 @@
         if (finalizar) finalizar.onclick = function(e) { if (e) e.preventDefault(); return submitDocument(true); };
     }
 
-    /* Executa antes do document.ready do edita.jsp. */
     preserveParentContext();
     installModelLoader();
 
