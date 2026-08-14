@@ -16,13 +16,13 @@
         'exDocumentoDTO.subscritorSel.id': 'Responsável pela Assinatura',
         'exDocumentoDTO.titularSel.sigla': 'Titular',
         'exDocumentoDTO.titularSel.id': 'Titular',
-        'exDocumentoDTO.destinatarioSel.sigla': 'Destinatário',
-        'exDocumentoDTO.destinatarioSel.id': 'Destinatário',
-        'exDocumentoDTO.lotacaoDestinatarioSel.sigla': 'Destinatário',
-        'exDocumentoDTO.lotacaoDestinatarioSel.id': 'Destinatário',
-        'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla': 'Destinatário',
-        'exDocumentoDTO.orgaoExternoDestinatarioSel.id': 'Destinatário',
-        'exDocumentoDTO.nmDestinatario': 'Destinatário',
+        'exDocumentoDTO.destinatarioSel.sigla': 'Destinatário - Usuário',
+        'exDocumentoDTO.destinatarioSel.id': 'Destinatário - Usuário',
+        'exDocumentoDTO.lotacaoDestinatarioSel.sigla': 'Destinatário - Lotação',
+        'exDocumentoDTO.lotacaoDestinatarioSel.id': 'Destinatário - Lotação',
+        'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla': 'Destinatário - Órgão Externo',
+        'exDocumentoDTO.orgaoExternoDestinatarioSel.id': 'Destinatário - Órgão Externo',
+        'exDocumentoDTO.nmDestinatario': 'Destinatário - Campo Livre',
         'exDocumentoDTO.classificacaoSel.sigla': 'Tipo Documental',
         'exDocumentoDTO.classificacaoSel.id': 'Tipo Documental',
         'exDocumentoDTO.descrDocumento': 'Assunto',
@@ -35,6 +35,58 @@
         'personalizarLocalidade': 'Cidade',
         'personalizarNome': 'Nome'
     };
+
+    function byName(name) {
+        var els = document.getElementsByName(name);
+        return els && els.length ? els[0] : null;
+    }
+
+    function isVisible(el) {
+        if (!el || $(el).is(':disabled')) return false;
+        if ($(el).closest('.d-none,[hidden]').length) return false;
+        var styleParent = $(el).closest('[style]');
+        if (styleParent.length && /display\s*:\s*none/i.test(styleParent.attr('style') || '')) return false;
+        return true;
+    }
+
+    function hasValue(el) {
+        return !!(el && String($(el).val() || '').trim());
+    }
+
+    function selectionHasValue(siglaName) {
+        var sigla = byName(siglaName);
+        var id = byName(siglaName.replace('Sel.sigla', 'Sel.id'));
+        return hasValue(id) || hasValue(sigla);
+    }
+
+    function destinatarioSelecionado() {
+        var tipo = byName('exDocumentoDTO.tipoDestinatario');
+        if (!tipo || !isVisible(tipo)) return null;
+
+        var valor = String(tipo.value || '');
+        if (valor === '1') {
+            return {
+                nome: 'Destinatário - Usuário',
+                vazio: !selectionHasValue('exDocumentoDTO.destinatarioSel.sigla')
+            };
+        }
+        if (valor === '2') {
+            return {
+                nome: 'Destinatário - Lotação',
+                vazio: !selectionHasValue('exDocumentoDTO.lotacaoDestinatarioSel.sigla')
+            };
+        }
+        if (valor === '3') {
+            return {
+                nome: 'Destinatário - Órgão Externo',
+                vazio: !selectionHasValue('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')
+            };
+        }
+        return {
+            nome: 'Destinatário - Campo Livre',
+            vazio: !hasValue(byName('exDocumentoDTO.nmDestinatario'))
+        };
+    }
 
     function friendlyName(el) {
         if (!el) return '';
@@ -73,7 +125,9 @@
 
         if (/subscritor/i.test(key)) return 'Responsável pela Assinatura';
         if (/titular/i.test(key)) return 'Titular';
-        if (/destinat/i.test(key)) return 'Destinatário';
+        if (/lotacaoDestinatario/i.test(key)) return 'Destinatário - Lotação';
+        if (/orgaoExternoDestinatario/i.test(key)) return 'Destinatário - Órgão Externo';
+        if (/destinatario/i.test(key)) return 'Destinatário - Usuário';
         if (/classificacao/i.test(key)) return 'Tipo Documental';
         if (/descrDocumento/i.test(key)) return 'Assunto';
         if (/funcao/i.test(key)) return 'Função';
@@ -85,7 +139,18 @@
         return '';
     }
 
-    function findInvalidFieldName() {
+    function firstRequiredFieldName() {
+        /* O Assunto tem prioridade absoluta, como solicitado no fluxo do PBdoc. */
+        var assunto = byName('exDocumentoDTO.descrDocumento');
+        if (assunto && isVisible(assunto) && !hasValue(assunto)) {
+            $(assunto).addClass('is-invalid');
+            return 'Assunto';
+        }
+
+        /* Depois valida o destinatário exatamente conforme a opção escolhida. */
+        var destinatario = destinatarioSelecionado();
+        if (destinatario && destinatario.vazio) return destinatario.nome;
+
         var invalid = $('#frm .is-invalid:visible').filter(function() {
             return this.type !== 'hidden' && !$(this).is(':disabled');
         });
@@ -113,20 +178,22 @@
 
     function patchModal() {
         if (!window.sigaModal || typeof window.sigaModal.alerta !== 'function') return;
-        if (window.sigaModal.alerta._enfasPbdocPatched) return;
+        if (window.sigaModal.alerta._enfasPbdocPatchedV2) return;
 
         var original = window.sigaModal.alerta;
         var patched = function(message) {
             var msg = String(message || '');
-            if (/Campo obrigat[oó]rio/i.test(msg)) {
-                var nome = findInvalidFieldName();
-                if (nome) {
-                    msg = "Preencha o campo '" + nome + "' antes de gravar o documento.";
-                }
+            var nome = firstRequiredFieldName();
+
+            /* Para avisos de validação, sempre usa o primeiro campo realmente pendente. */
+            if (nome && (/Campo obrigat[oó]rio/i.test(msg) || /Preencha o campo/i.test(msg) || /antes de gravar o documento/i.test(msg))) {
+                msg = "Preencha o campo '" + nome + "' antes de gravar o documento.";
             }
+
             return original.call(window.sigaModal, msg);
         };
         patched._enfasPbdocPatched = true;
+        patched._enfasPbdocPatchedV2 = true;
         window.sigaModal.alerta = patched;
     }
 
@@ -148,7 +215,8 @@
             parent.style.display = 'flex';
             parent.style.flexWrap = 'wrap';
             parent.style.alignItems = 'center';
-            parent.style.gap = '4px';
+            parent.style.columnGap = '2px';
+            parent.style.rowGap = '2px';
 
             Array.prototype.slice.call(parent.childNodes).forEach(function(node) {
                 if (node.nodeType === 3 && !String(node.nodeValue || '').replace(/\u00a0/g, '').trim()) {
@@ -159,9 +227,11 @@
 
         buttons.forEach(function(btn) {
             btn.style.margin = '0';
+            btn.style.marginRight = '0';
+            btn.style.marginLeft = '0';
         });
 
-        var gravar = buttons[0];
+        var gravar = document.getElementById('btnGravar');
         if (gravar) {
             gravar.className = 'btn btn-primary';
             gravar.innerHTML = '<u>G</u>ravar';
