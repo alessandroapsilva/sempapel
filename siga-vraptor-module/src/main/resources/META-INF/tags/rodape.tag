@@ -93,6 +93,7 @@
 <!-- Correções específicas do fluxo de edição do SIGA-EX. O arquivo existe apenas no sigaex. -->
 <c:if test="${pageContext.request.contextPath eq '/sigaex'}">
 	<script src="/sigaex/javascript/enfas-documento-fix.js?v=20260813" type="text/javascript" charset="utf-8"></script>
+	<script src="/sigaex/javascript/enfas-pbdoc-ui-fix.js?v=20260814" type="text/javascript" charset="utf-8"></script>
 </c:if>
 
 <!-- RODAPÉ SEM CONDICIONAL GOVSP - SEMPRE VISÍVEL (exceto popups) -->
