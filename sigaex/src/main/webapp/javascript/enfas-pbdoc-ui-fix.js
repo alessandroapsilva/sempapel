@@ -116,7 +116,7 @@
         if (!selectionHasValue('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
 
         var substituto = byName('exDocumentoDTO.substituicao');
-        if (substituto && substituto.checked && !selectionHasValue('exDocumentoDTO.titularSel.sigla')) return 'Titular';
+        if (substituto && substituto.checked && !selectionHasValue('exDocumentoDTO.titularSel.sigla')) return 'Substituto Responsável pela Assinatura';
 
         var invalid = $('#frm .is-invalid:visible').filter(function() {
             return this.type !== 'hidden' && !$(this).is(':disabled');
@@ -140,19 +140,22 @@
 
     function patchModal() {
         if (!window.sigaModal || typeof window.sigaModal.alerta !== 'function') return;
-        if (window.sigaModal.alerta._enfasPbdocPatchedV3) return;
+        if (window.sigaModal.alerta._enfasPbdocTextoCompleto) return;
 
         var original = window.sigaModal.alerta;
         var patched = function(message) {
             var msg = String(message || '');
             var nome = firstRequiredFieldName();
-            var ehValidacao = /Campo obrigat[oó]rio/i.test(msg) || /Favor\s+(preencher|informar|selecionar)/i.test(msg) || /Preencha\s+(o\s+|a\s+)?campo/i.test(msg) || /antes de gravar o documento/i.test(msg);
-            if (ehValidacao) msg = nome || 'Verifique os campos obrigatórios';
+            var ehValidacao = /Campo obrigat[oó]rio/i.test(msg) || /Favor\s+(preencher|informar|selecionar|verificar)/i.test(msg) || /Preencha\s+(o\s+|a\s+)?campo/i.test(msg) || /antes de gravar o documento/i.test(msg);
+            if (ehValidacao && nome) {
+                msg = "Preencha o campo '" + nome + "' antes de gravar o documento.";
+            }
             return original.call(window.sigaModal, msg);
         };
         patched._enfasPbdocPatched = true;
         patched._enfasPbdocPatchedV2 = true;
         patched._enfasPbdocPatchedV3 = true;
+        patched._enfasPbdocTextoCompleto = true;
         window.sigaModal.alerta = patched;
     }
 
