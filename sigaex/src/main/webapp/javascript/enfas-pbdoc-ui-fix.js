@@ -11,9 +11,43 @@
             .trim();
     }
 
+    var FIELD_NAMES = {
+        'exDocumentoDTO.subscritorSel.sigla': 'Responsável pela Assinatura',
+        'exDocumentoDTO.subscritorSel.id': 'Responsável pela Assinatura',
+        'exDocumentoDTO.titularSel.sigla': 'Titular',
+        'exDocumentoDTO.titularSel.id': 'Titular',
+        'exDocumentoDTO.destinatarioSel.sigla': 'Destinatário - Usuário',
+        'exDocumentoDTO.destinatarioSel.id': 'Destinatário - Usuário',
+        'exDocumentoDTO.lotacaoDestinatarioSel.sigla': 'Destinatário - Lotação',
+        'exDocumentoDTO.lotacaoDestinatarioSel.id': 'Destinatário - Lotação',
+        'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla': 'Destinatário - Órgão Externo',
+        'exDocumentoDTO.orgaoExternoDestinatarioSel.id': 'Destinatário - Órgão Externo',
+        'exDocumentoDTO.nmDestinatario': 'Destinatário - Campo Livre',
+        'exDocumentoDTO.classificacaoSel.sigla': 'Tipo Documental',
+        'exDocumentoDTO.classificacaoSel.id': 'Tipo Documental',
+        'exDocumentoDTO.descrDocumento': 'Assunto',
+        'descrDocumento': 'Assunto',
+        'exDocumentoDTO.dtDocString': 'Data',
+        'exDocumentoDTO.idMod': 'Modelo',
+        'exDocumentoDTO.cosignatarioSel.sigla': 'Cossignatários',
+        'exDocumentoDTO.cosignatarioSel.id': 'Cossignatários',
+        'personalizarFuncao': 'Função',
+        'personalizarUnidade': 'Lotação',
+        'personalizarLocalidade': 'Cidade',
+        'personalizarNome': 'Nome'
+    };
+
     function byName(name) {
         var els = document.getElementsByName(name);
         return els && els.length ? els[0] : null;
+    }
+
+    function isVisible(el) {
+        if (!el || $(el).is(':disabled')) return false;
+        if ($(el).closest('.d-none,[hidden]').length) return false;
+        var styleParent = $(el).closest('[style]');
+        if (styleParent.length && /display\s*:\s*none/i.test(styleParent.attr('style') || '')) return false;
+        return $(el).is(':visible');
     }
 
     function hasValue(el) {
@@ -23,212 +57,107 @@
     function selectionHasValue(siglaName) {
         var sigla = byName(siglaName);
         var id = byName(siglaName.replace('Sel.sigla', 'Sel.id'));
-        return hasValue(sigla) || hasValue(id);
+        return hasValue(id) || hasValue(sigla);
     }
 
-    function avisoPbdoc(msg, silencioso, elemento) {
-        var btn = document.getElementById('btnGravar');
-        if (btn) btn.disabled = false;
-        var btnFinalizar = document.getElementById('btnFinalizarAssinar');
-        if (btnFinalizar) btnFinalizar.disabled = false;
+    function destinatarioSelecionado() {
+        var tipo = byName('exDocumentoDTO.tipoDestinatario');
+        if (!tipo || !isVisible(tipo)) return null;
 
-        if (silencioso) {
-            if (typeof window.avisoVermelho === 'function') {
-                window.avisoVermelho('O documento não pôde ser salvo: ' + msg);
-            }
-            return false;
-        }
-
-        if (window.sigaModal && typeof window.sigaModal.alerta === 'function') {
-            window.sigaModal.alerta(msg).focus(elemento);
-        } else {
-            window.alert(msg);
-        }
-        return false;
+        var valor = String(tipo.value || '');
+        if (valor === '1') return { nome: 'Destinatário - Usuário', vazio: !selectionHasValue('exDocumentoDTO.destinatarioSel.sigla') };
+        if (valor === '2') return { nome: 'Destinatário - Lotação', vazio: !selectionHasValue('exDocumentoDTO.lotacaoDestinatarioSel.sigla') };
+        if (valor === '3') return { nome: 'Destinatário - Órgão Externo', vazio: !selectionHasValue('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla') };
+        return { nome: 'Destinatário - Campo Livre', vazio: !hasValue(byName('exDocumentoDTO.nmDestinatario')) };
     }
 
-    function nomeCampoInvalido(el) {
+    function friendlyName(el) {
         if (!el) return '';
         var key = el.name || el.id || '';
-        var conhecidos = {
-            'exDocumentoDTO.descrDocumento': 'Assunto',
-            'descrDocumento': 'Assunto',
-            'exDocumentoDTO.subscritorSel.sigla': 'Responsável pela Assinatura',
-            'exDocumentoDTO.subscritorSel.id': 'Responsável pela Assinatura',
-            'exDocumentoDTO.titularSel.sigla': 'Substituto Responsável pela Assinatura',
-            'exDocumentoDTO.titularSel.id': 'Substituto Responsável pela Assinatura',
-            'exDocumentoDTO.classificacaoSel.sigla': 'Tipo Documental',
-            'exDocumentoDTO.classificacaoSel.id': 'Tipo Documental',
-            'exDocumentoDTO.destinatarioSel.sigla': 'Destinatário - Usuário',
-            'exDocumentoDTO.destinatarioSel.id': 'Destinatário - Usuário',
-            'exDocumentoDTO.lotacaoDestinatarioSel.sigla': 'Destinatário - Lotação',
-            'exDocumentoDTO.lotacaoDestinatarioSel.id': 'Destinatário - Lotação',
-            'exDocumentoDTO.orgaoExternoDestinatarioSel.sigla': 'Destinatário - Órgão Externo',
-            'exDocumentoDTO.orgaoExternoDestinatarioSel.id': 'Destinatário - Órgão Externo',
-            'exDocumentoDTO.nmDestinatario': 'Destinatário - Campo Livre',
-            'personalizarFuncao': 'Função',
-            'personalizarUnidade': 'Lotação',
-            'personalizarLocalidade': 'Cidade',
-            'personalizarNome': 'Nome'
-        };
-        if (conhecidos[key]) return conhecidos[key];
-
-        if (typeof window.obterLabel === 'function') {
-            try {
-                var lbl = window.obterLabel($(el));
-                if (lbl && lbl.length) {
-                    var t = clean(lbl.text());
-                    if (t) return t;
-                }
-            } catch (e) {}
-        }
+        if (FIELD_NAMES[key]) return FIELD_NAMES[key];
 
         var group = $(el).closest('.form-group');
-        var label = group.find('label').first().clone();
-        label.find('a,span,i,small').remove();
-        var text = clean(label.text());
-        if (text && !/Campo obrigat[oó]rio/i.test(text)) return text;
+        if (group.length) {
+            var labels = group.find('label').filter(function() { return clean($(this).text()).length > 0; });
+            if (labels.length) {
+                var labelText = clean(labels.first().clone().find('a,span,i,small').remove().end().text());
+                if (labelText && !/Campo obrigat[oó]rio/i.test(labelText)) return labelText;
+            }
+        }
+
+        var title = clean(el.getAttribute('title'));
+        if (title && !/Campo obrigat[oó]rio/i.test(title)) return title;
+
+        if (/subscritor/i.test(key)) return 'Responsável pela Assinatura';
+        if (/titular/i.test(key)) return 'Titular';
+        if (/lotacaoDestinatario/i.test(key)) return 'Destinatário - Lotação';
+        if (/orgaoExternoDestinatario/i.test(key)) return 'Destinatário - Órgão Externo';
+        if (/destinatario/i.test(key)) return 'Destinatário - Usuário';
+        if (/classificacao/i.test(key)) return 'Tipo Documental';
+        if (/descrDocumento/i.test(key)) return 'Assunto';
+        if (/funcao/i.test(key)) return 'Função';
+        if (/unidade|lotacao/i.test(key)) return 'Lotação';
+        if (/localidade|cidade/i.test(key)) return 'Cidade';
+        if (/nome/i.test(key)) return 'Nome';
+        if (/modelo|idMod/i.test(key)) return 'Modelo';
         return '';
     }
 
-    function limparFavorPreencherInline() {
-        $('#frm .is-invalid').each(function() {
-            var name = this.name || '';
-            if (!name) return;
-            $('.invalid-feedback-' + name.replace(/([:.\[\],=@])/g, '\\$1')).each(function() {
-                var txt = clean($(this).text());
-                if (/^Favor\s+(preencher|informar|selecionar)/i.test(txt)) $(this).text('');
-            });
+    function firstRequiredFieldName() {
+        var assunto = byName('exDocumentoDTO.descrDocumento') || document.getElementById('descrDocumento');
+        if (assunto && isVisible(assunto) && !hasValue(assunto)) {
+            $(assunto).addClass('is-invalid');
+            return 'Assunto';
+        }
+
+        var destinatario = destinatarioSelecionado();
+        if (destinatario && destinatario.vazio) return destinatario.nome;
+
+        if (!selectionHasValue('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
+
+        var substituto = byName('exDocumentoDTO.substituicao');
+        if (substituto && substituto.checked && !selectionHasValue('exDocumentoDTO.titularSel.sigla')) return 'Titular';
+
+        var invalid = $('#frm .is-invalid:visible').filter(function() {
+            return this.type !== 'hidden' && !$(this).is(':disabled');
         });
+        for (var i = 0; i < invalid.length; i++) {
+            var name = friendlyName(invalid[i]);
+            if (name && !/Campo obrigat[oó]rio/i.test(name)) return name;
+        }
+
+        var required = $('#frm [required]:visible, #frm [aria-required="true"]:visible').filter(function() {
+            if ($(this).is(':disabled') || this.type === 'hidden') return false;
+            if (this.type === 'checkbox' || this.type === 'radio') return !$('[name="' + this.name + '"]:checked').length;
+            return !String($(this).val() || '').trim();
+        });
+        for (var j = 0; j < required.length; j++) {
+            var requiredName = friendlyName(required[j]);
+            if (requiredName && !/Campo obrigat[oó]rio/i.test(requiredName)) return requiredName;
+        }
+        return '';
     }
 
-    function validarPbdoc(silencioso) {
-        if (typeof window.personalizacaoJuntar === 'function') window.personalizacaoJuntar();
+    function patchModal() {
+        if (!window.sigaModal || typeof window.sigaModal.alerta !== 'function') return;
+        if (window.sigaModal.alerta._enfasPbdocPatchedV3) return;
 
-        var descr = byName('exDocumentoDTO.descrDocumento');
-        var descricaoAutomatica = document.getElementById('descricaoAutomatica');
-        var responsavel = byName('exDocumentoDTO.subscritorSel.sigla');
-        var substituicao = byName('exDocumentoDTO.substituicao');
-        var titular = byName('exDocumentoDTO.titularSel.sigla');
-
-        /* Regra ENFAS mantida: Assunto é o primeiro obrigatório a ser avisado. */
-        if (descricaoAutomatica == null && (!descr || !String(descr.value || '').trim())) {
-            return avisoPbdoc("Preencha o campo 'Assunto' antes de gravar o documento.", silencioso, descr);
-        }
-
-        if (!responsavel || !String(responsavel.value || '').trim()) {
-            return avisoPbdoc("Preencha o campo 'Responsável pela Assinatura' antes de gravar o documento.", silencioso, responsavel);
-        }
-
-        if (substituicao && substituicao.checked && (!titular || !String(titular.value || '').trim())) {
-            return avisoPbdoc("Preencha o campo 'Substituto Responsável pela Assinatura' antes de gravar o documento.", silencioso, titular);
-        }
-
-        var classificacao = document.getElementById('formulario_exDocumentoDTO.classificacaoSel_id') || byName('exDocumentoDTO.classificacaoSel.id');
-        if (!classificacao || !String(classificacao.value || '').trim()) {
-            return avisoPbdoc("Preencha o campo 'Tipo Documental' antes de gravar o documento.", silencioso, classificacao);
-        }
-
-        var tipoDest = byName('exDocumentoDTO.tipoDestinatario');
-        if (tipoDest) {
-            var tipo = String(tipoDest.value || '');
-            if (tipo === '1' && !selectionHasValue('exDocumentoDTO.destinatarioSel.sigla')) {
-                return avisoPbdoc("Preencha o campo 'Destinatário - Usuário' antes de gravar o documento.", silencioso, byName('exDocumentoDTO.destinatarioSel.sigla'));
-            }
-            if (tipo === '2' && !selectionHasValue('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) {
-                return avisoPbdoc("Preencha o campo 'Destinatário - Lotação' antes de gravar o documento.", silencioso, byName('exDocumentoDTO.lotacaoDestinatarioSel.sigla'));
-            }
-            if (tipo === '3' && !selectionHasValue('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) {
-                return avisoPbdoc("Preencha o campo 'Destinatário - Órgão Externo' antes de gravar o documento.", silencioso, byName('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla'));
-            }
-            if (tipo !== '1' && tipo !== '2' && tipo !== '3') {
-                var livre = byName('exDocumentoDTO.nmDestinatario');
-                if (livre && !String(livre.value || '').trim()) {
-                    return avisoPbdoc("Preencha o campo 'Destinatário - Campo Livre' antes de gravar o documento.", silencioso, livre);
-                }
-            }
-        }
-
-        var personalizacao = byName('exDocumentoDTO.personalizacao');
-        if (personalizacao && personalizacao.checked) {
-            var camposPersonalizacao = [
-                ['personalizarFuncao', 'Função'],
-                ['personalizarUnidade', 'Lotação'],
-                ['personalizarLocalidade', 'Cidade'],
-                ['personalizarNome', 'Nome']
-            ];
-            for (var i = 0; i < camposPersonalizacao.length; i++) {
-                var campo = document.getElementById(camposPersonalizacao[i][0]);
-                if (campo && !String(campo.value || '').trim()) {
-                    return avisoPbdoc("Preencha o campo '" + camposPersonalizacao[i][1] + "' antes de gravar o documento.", silencioso, campo);
-                }
-            }
-        }
-
-        if (typeof window.validarCamposEntrevista === 'function') {
-            window.validarCamposEntrevista();
-            limparFavorPreencherInline();
-        }
-
-        var camposInvalidos = $('#frm').find('.is-invalid').not('input[type="hidden"]').filter(':visible');
-        if (camposInvalidos.length) {
-            var nome = nomeCampoInvalido(camposInvalidos[0]);
-            if (nome) {
-                return avisoPbdoc("Preencha o campo '" + nome + "' antes de gravar o documento.", silencioso, camposInvalidos[0]);
-            }
-            return avisoPbdoc('Favor verificar o campo destacado', silencioso, camposInvalidos[0]);
-        }
-
-        var eletroHidden = document.getElementById('eletronicoHidden');
-        var eletro1 = document.getElementById('eletronicoCheck1');
-        var eletro2 = document.getElementById('eletronicoCheck2');
-        if (!eletroHidden && eletro1 && eletro2 && !eletro1.checked && !eletro2.checked) {
-            return avisoPbdoc('É necessário informar se o documento será digital ou físico, na parte superior da tela.', silencioso, eletro1);
-        }
-
-        var limiteEl = byName('exDocumentoDTO.tamanhoMaximoDescricao');
-        if (limiteEl && descr && descr.value.length >= Number(limiteEl.value || 0)) {
-            return avisoPbdoc('O tamanho máximo da descrição é de ' + limiteEl.value + ' caracteres', silencioso, descr);
-        }
-
-        var personalizacaoJunta = document.getElementById('frm_nmFuncaoSubscritor');
-        if (personalizacaoJunta && personalizacaoJunta.value.length > 128) {
-            return avisoPbdoc('O tamanho máximo da soma dos caracteres de personalização é de 128 caracteres', silencioso, personalizacaoJunta);
-        }
-
-        return true;
-    }
-
-    function gravarPbdoc(assinar) {
-        if (typeof window.saveTimer !== 'undefined') clearTimeout(window.saveTimer);
-        if (!validarPbdoc(false)) {
-            if (typeof window.triggerAutoSave === 'function') window.triggerAutoSave();
-            if (window.sigaSpinner && typeof window.sigaSpinner.ocultar === 'function') window.sigaSpinner.ocultar();
-            return false;
-        }
-
-        var frm = document.getElementById('frm');
-        if (!frm) return false;
-
-        frm.action = 'gravar';
-        window.customOnsubmit = function() { return true; };
-        if (typeof frm.submitsave !== 'undefined') frm.submit = frm.submitsave;
-        if (typeof window.onSave === 'function') window.onSave();
-
-        var gravarAssinar = document.getElementById('gravarAssinar');
-        if (gravarAssinar) gravarAssinar.value = assinar ? 'true' : 'false';
-        var fecharDoc = document.getElementById('fecharDoc');
-        if (fecharDoc) fecharDoc.value = assinar ? 'true' : 'false';
-
-        var btn = document.getElementById(assinar ? 'btnFinalizarAssinar' : 'btnGravar');
-        if (btn) btn.disabled = true;
-        if (assinar && window.sigaSpinner && typeof window.sigaSpinner.mostrar === 'function') window.sigaSpinner.mostrar();
-
-        frm.submit();
-        return false;
+        var original = window.sigaModal.alerta;
+        var patched = function(message) {
+            var msg = String(message || '');
+            var nome = firstRequiredFieldName();
+            var ehValidacao = /Campo obrigat[oó]rio/i.test(msg) || /Favor\s+(preencher|informar|selecionar)/i.test(msg) || /Preencha\s+(o\s+|a\s+)?campo/i.test(msg) || /antes de gravar o documento/i.test(msg);
+            if (ehValidacao) msg = nome || 'Verifique os campos obrigatórios';
+            return original.call(window.sigaModal, msg);
+        };
+        patched._enfasPbdocPatched = true;
+        patched._enfasPbdocPatchedV2 = true;
+        patched._enfasPbdocPatchedV3 = true;
+        window.sigaModal.alerta = patched;
     }
 
     function styleButtonsLikePBdoc() {
+        if (window.location.pathname.indexOf('/app/expediente/doc/editar') < 0) return;
         var buttons = [
             document.getElementById('btnGravar'),
             document.getElementById('btnFinalizarAssinar') || document.querySelector('button[name="finalizareGravar"]'),
@@ -243,25 +172,15 @@
             parent.style.display = 'flex';
             parent.style.flexWrap = 'wrap';
             parent.style.alignItems = 'center';
-            parent.style.gap = '3px';
+            parent.style.columnGap = '2px';
+            parent.style.rowGap = '2px';
         }
-        buttons.forEach(function(btn) { btn.style.margin = '0'; });
+        buttons.forEach(function(btn) { btn.style.margin = '0'; btn.style.marginRight = '0'; btn.style.marginLeft = '0'; });
 
         var gravar = document.getElementById('btnGravar');
-        if (gravar) {
-            gravar.className = 'btn btn-primary';
-            gravar.innerHTML = '<u>G</u>ravar';
-            gravar.onclick = function(e) { if (e) e.preventDefault(); return gravarPbdoc(false); };
-        }
-
+        if (gravar) { gravar.className = 'btn btn-primary'; gravar.innerHTML = '<u>G</u>ravar'; }
         var finalizar = document.getElementById('btnFinalizarAssinar') || document.querySelector('button[name="finalizareGravar"]');
-        if (finalizar) {
-            finalizar.id = 'btnFinalizarAssinar';
-            finalizar.className = 'btn btn-primary';
-            finalizar.innerHTML = '<u>F</u>inalizar e Assinar';
-            finalizar.onclick = function(e) { if (e) e.preventDefault(); return gravarPbdoc(true); };
-        }
-
+        if (finalizar) { finalizar.className = 'btn btn-primary'; finalizar.innerHTML = '<u>F</u>inalizar e Assinar'; }
         var verDoc = document.querySelector('button[name="ver_doc"]');
         if (verDoc) { verDoc.className = 'btn btn-info'; verDoc.innerHTML = '<u>V</u>er Documento'; }
         var verPdf = document.querySelector('button[name="ver_doc_pdf"]');
@@ -270,18 +189,19 @@
         if (voltar) { voltar.className = 'btn btn-info'; voltar.innerHTML = 'Volta<u>r</u>'; }
     }
 
+    function annotateFields() {
+        $('#frm input, #frm select, #frm textarea').each(function() {
+            var name = friendlyName(this);
+            if (name && (!this.title || /Campo obrigat[oó]rio/i.test(this.title))) this.title = name;
+        });
+    }
+
     function trocarMatriculaPorUsuario(root) {
         var $root = root ? $(root) : $(document);
-
-        var tipoDest = $('select[name="exDocumentoDTO.tipoDestinatario"]');
-        tipoDest.find('option[value="1"]').each(function() {
-            if (/matr[ií]cula/i.test($(this).text())) $(this).text('Usuário');
-        });
-
-        $root.find('th,td,label,span,div,a,option').addBack('th,td,label,span,div,a,option').each(function() {
+        $root.find('th,td,label,span,div,a').addBack('th,td,label,span,div,a').each(function() {
             if (this.children && this.children.length) return;
             var txt = clean(this.textContent);
-            if (/^Matr[ií]cula$/i.test(txt)) this.textContent = 'Usuário';
+            if (txt === 'Matrícula' || txt === 'Matricula') this.textContent = 'Usuário';
         });
     }
 
@@ -291,7 +211,8 @@
         var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(m) {
                 for (var i = 0; i < m.addedNodes.length; i++) {
-                    if (m.addedNodes[i].nodeType === 1) trocarMatriculaPorUsuario(m.addedNodes[i]);
+                    var node = m.addedNodes[i];
+                    if (node.nodeType === 1) trocarMatriculaPorUsuario(node);
                 }
             });
         });
@@ -300,20 +221,16 @@
 
     function install() {
         if (window.location.pathname.indexOf('/app/expediente/doc/editar') < 0) return;
-
-        /* Sobrescreve o fluxo anterior e usa a mesma estrutura de validação do PBdoc. */
-        window.validar = validarPbdoc;
-        window.gravar = gravarPbdoc;
-        window.gravarDoc = function() { return gravarPbdoc(false); };
-        window.gravarAssinarDoc = function() { return gravarPbdoc(true); };
-
+        annotateFields();
+        patchModal();
         styleButtonsLikePBdoc();
         installRecipientObserver();
-
         setTimeout(function() {
+            annotateFields();
+            patchModal();
             styleButtonsLikePBdoc();
             trocarMatriculaPorUsuario(document);
-        }, 300);
+        }, 250);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install);
