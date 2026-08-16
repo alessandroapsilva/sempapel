@@ -518,15 +518,7 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 							sb.append(blocoSubscritor);
 							sb.append("</span>");
 						} else {
-							if (Prop.getBool("assinatura.estampar")) {
-								sb.append("<span>- assinado eletronicamente");
-								String dataHoraAssinatura = getDataHoraAssinaturaPessoaComTokenOuSenha(subscritor);
-								if (dataHoraAssinatura != null)
-									sb.append(" em ").append(dataHoraAssinatura);
-								sb.append(" -<br/>");
-							} else {
-								sb.append("<span>");
-							}
+							sb.append("<span>");
 							sb.append(blocoSubscritor);
 							sb.append("</span>");	
 						}

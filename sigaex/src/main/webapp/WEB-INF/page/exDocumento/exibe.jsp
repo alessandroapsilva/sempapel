@@ -135,35 +135,6 @@
 	.tabela-ordenavel tbody a {
 		pointer-events: none;
 	}
-	
-	.btn-assinar-fallback {
-		position: fixed;
-		bottom: 30px;
-		right: 30px;
-		z-index: 99999;
-		background-color: #28a745;
-		color: white;
-		border: none;
-		border-radius: 50px;
-		padding: 15px 30px;
-		font-size: 1.2rem;
-		box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-		display: none;
-		transition: all 0.3s;
-		text-decoration: none;
-		cursor: pointer;
-	}
-	.btn-assinar-fallback:hover {
-		background-color: #218838;
-		transform: scale(1.05);
-		box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-		text-decoration: none;
-		color: white;
-	}
-	.btn-assinar-fallback i {
-		margin-right: 8px;
-	}
-							
 </style>						
 
 <script>
@@ -277,10 +248,29 @@
 				<input type="hidden" id="id" name="id"/> <input type="hidden" id="sigla" name="sigla"/>
 				<input type="hidden" id="visualizador" value="${f:resource('/sigaex.pdf.visualizador') }"/>
 			</form>
-			<h2>
-				<c:if test="${empty ocultarCodigo}">${docVO.sigla}
+			<h2 class="sigla-documento">
+				<c:if test="${empty ocultarCodigo}">
+					${docVO.sigla}
+					<c:if test="${docVO.doc ne null}">
+						<small class="iiiu text-muted" title="Link Permanente: Identificador Incremental Interno Único (ID)">
+							<a href="${pageContext.request.contextPath}/app/documento/${docVO.doc.id}">#${docVO.doc.id}</a>
+							<c:if test="${(f:resource('/siga.ambiente') eq 'desenv') or (cadastrante.sesbPessoa eq 'ZZZ')}">
+								<script>
+									function copiar(targetComponentName) {
+										const component = document.getElementById(targetComponentName);
+										component.select();
+										navigator.clipboard.writeText(component.value);
+										alert('Localização do arquivo copiada para a área de transferência.');
+									}
+								</script>
+								<input type="hidden" id="docPathInput" name="doc-path-input" value="${f:referenciaArquivo(docVO.doc).getAbsolutePath()}" />
+								<button type="button" class="btn btn-sm btn-link" title="Localização do documento: ${f:referenciaArquivo(docVO.doc).getAbsolutePath()} (clique para copiar)" onclick="copiar('docPathInput')">
+									<i class="fa fa-folder"></i>
+								</button>
+							</c:if>
+						</small>
+					</c:if>
 				</c:if>
-				<button type="button" name="voltar" onclick="${(empty param.linkVolta) ? 'javascript:window.location.href=\'/siga\';' : 'javascript:'.concat(param.linkVolta) }" class="btn btn-secondary float-right ${hide_only_TRF2}" accesskey="r">Volta<u>r</u></button>				
 			</h2>
 		</div>
 	</div>
@@ -379,8 +369,6 @@
 						<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 						<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 						<script src="/sigaex/javascript/filtroHistoricoDeMovimentacoes.js"></script>
-						
-<script src="/sigaex/javascript/filtroHistoricoDeMovimentacoes.js"></script>
 
 <style>
     .hidden-row {
@@ -518,6 +506,14 @@
 					<c:if test="${m.pendencias}">
 						<div class="card-sidebar card bg-light mb-3" id="pendencias">
 							<tags:collapse title="Pendências" id="Pendencias" collapseMode="${collapse_Expanded}">
+								<c:if test="${not empty m.pendenciaProximoModelo}">
+									<p style="margin-bottom: 3px;"><b style="color: rgb(195, 0, 0)">Próximo Documento:</b></p>
+									<ul>
+										<c:if test="${m.pendenciaProximoModelo == 110}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Despacho de Concessão de Diárias" style="text-decoration: none">Despacho de Concessão de Diárias</a></li></c:if>
+										<c:if test="${m.pendenciaProximoModelo == 111}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Registro de Pagamento de Diárias" style="text-decoration: none">Registro de Pagamento de Diárias</a></li></c:if>
+										<c:if test="${m.pendenciaProximoModelo == 112}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Certidão de Publicação de Diárias" style="text-decoration: none">Certidão de Publicação de Diárias</a></li></c:if>
+									</ul>
+								</c:if>
 								<c:if test="${not empty m.pendenciasDeAnexacao}">
 									<p style="margin-bottom: 3px;">
 										<b style="color: rgb(195, 0, 0)">Anexos Pendentes:</b>
@@ -1812,18 +1808,4 @@ document.getElementById('incluir-documento').onclick = function() {
 <c:if test="${podeReordenar}"> 
 	<script src="/siga/javascript/assinatura.reordenar-ass.js"></script>
 </c:if>
-
-<button id="btn-assinar-fallback" class="btn-assinar-fallback" onclick="javascript:window.location.href='/sigaex/app/expediente/mov/assinar?sigla=${docVO.sigla}'">
-	<i class="fas fa-pen"></i> Assinar Agora
-</button>
-
-<script type="text/javascript">
-$(document).ajaxError(function(event, jqXHR, settings, error) {
-    if (jqXHR.status === 500) {
-        console.warn('Erro 500 suprimido:', settings.url);
-        return true;
-    }
-});
-</script>
-
 </siga:pagina>
