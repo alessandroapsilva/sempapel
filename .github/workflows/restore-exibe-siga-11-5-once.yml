@@ -1,0 +1,46 @@
+name: Restore exibe SIGA 11.5 one-shot
+on:
+  push:
+    branches: [ release/11.5 ]
+    paths:
+      - '.github/workflows/restore-exibe-siga-11-5-once.yml'
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+      - name: Restaurar exibe oficial e aplicar ajustes ENFAS compatíveis
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET='sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp'
+          curl -fsSL 'https://raw.githubusercontent.com/projeto-siga/siga/release/11.5/sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp' -o "$TARGET"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
+          s=p.read_text(encoding='utf-8')
+          # Remove apenas o botão Voltar do cabeçalho. Mantém todas as ações oficiais do SIGA.
+          s=re.sub(r'\s*<button type="button" name="voltar" onclick="\$\{\(empty param\.linkVolta\).*?</button>\s*', '\n', s, count=1, flags=re.S)
+          # Garantia: não permitir função trazida do PBdoc que não existe nesta base.
+          if 'referenciaArquivo(' in s:
+              raise SystemExit('ERRO: referenciaArquivo ainda existe')
+          p.write_text(s, encoding='utf-8')
+          PY
+          grep -q '<siga:pagina titulo="${docVO.sigla}"' "$TARGET"
+          ! grep -q 'referenciaArquivo' "$TARGET"
+      - name: Commitar restauração e remover workflow temporário
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/restore-exibe-siga-11-5-once.yml
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          git commit -m 'Restaura exibe.jsp oficial SIGA 11.5 com ajustes ENFAS'
+          git push origin HEAD:release/11.5
