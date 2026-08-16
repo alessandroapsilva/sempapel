@@ -77,8 +77,9 @@ public class Stamp {
 			Integer paginaFinal, Integer cOmitirNumeracao, String instancia, String orgaoUsu, String marcaDaguaDoModelo,
 			List<Long> idsAssinantes, boolean tamanhoOriginal, boolean reduzirVisuAssinPdf) throws DocumentException, IOException {
 			
-		if (idsAssinantes != null && idsAssinantes.size() > 0 && Prop.getBool("assinatura.estampar"))
-			abPdf = estamparAssinaturas(abPdf, idsAssinantes);
+		// ENFAS: não inserir a imagem/texto visual "assinado eletronicamente" no corpo do PDF.
+		// A assinatura e seus metadados continuam preservados normalmente.
+		// A estampa antiga era aplicada aqui por estamparAssinaturas(...).
 
 		PdfReader pdfIn = new PdfReader(abPdf);
 		
