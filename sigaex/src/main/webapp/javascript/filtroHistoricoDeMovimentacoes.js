@@ -1,436 +1,253 @@
-$(document).ready(function() {
-	$('#lotacaoSelect').select2();
-	document.getElementById('showAllButton').style.display = 'none';
-	//se o js carregar, tira a classe css padrão que foi carrega no exibe.jsp
-	$('#lotacaoSelect').select2().removeClass('default-select');
-	$('#modeloSelect').select2().removeClass('default-select');
-	$('#especieSelect').select2().removeClass('default-select');
-	
-});
+(function () {
+    'use strict';
 
-function init() {
-    $('#lotacaoSelect').select2();
-    $('#modeloSelect').select2(); 
-    $('#especieSelect').select2();
-    
-    ordenaOpcoesOrdemAlfabetica(document.getElementById('lotacaoSelect'));
-    removeDuplicateOptions();
-    
-    //Ao carregar a página, busca os dados e preenche selects com listas de Espécies e Modelos
-    getModelosFromSigaExAPI();
-    getEspeciesFromSigaExAPINovo();
-}
-
-function getEspeciesFromSigaExAPINovo() {
-	//Busca espécies no endpoint /sigaex/api/v1/especies
-    $.ajax({
-        url: "/sigaex/api/v1/especies",
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(result) {
-
-			if (result && result.especies && Array.isArray(result.especies)) {
-
-				addRetornoEndpointEspeciesNoSelect(result.especies);
-				
-				      
-            } else {
-                console.log("Nenhuma especie encontrada.");
-            }
-        },
-        error: function(result) {
-            console.log("Erro ao buscar especies: " + result.errormsg);
-        },
-    });
-}
-
-function addRetornoEndpointEspeciesNoSelect(especies) {
-    var select = document.getElementById('especieSelect');
-    // Utiliza um loop for para iterar sobre o array de espécies
-    for (var i = 0; i < especies.length; i++) {
-        var especie = especies[i];
-        var option = document.createElement('option');
-        option.value = especie[0]; // ID da espécie
-        //option.text = especie[1] + ' (' + especie[2] + ')'; // Nome e abreviação da espécie
-        option.text = especie[1]; // Texto da Espécie
-        select.appendChild(option);
+    function $id(id) {
+        return document.getElementById(id);
     }
-}
 
-function addEspeciesToSelect(modelos) {
-    var select = document.getElementById('especieSelect');
-    modelos.forEach(function(modelo) {
-        var option = document.createElement('option');        
-        option.value = modelo.idModelo;
-        
-        //consultar as especies de todos os documentos
-        option.text = modelo.especie;
-        select.appendChild(option);
-    });
-}
+    function compactarSigla(sigla) {
+        if (!sigla) return '';
+        return String(sigla).replace(/-/g, '').replace(/\//g, '').trim();
+    }
 
-function applyFilter() {
-    applyCombinedFilters();
-    //Exibe o botão "Ver todos"
-    document.getElementById('showAllButton').style.display = 'inline-block'; 
-    isFiltered = true;
-}
+    function texto(el) {
+        return el ? (el.textContent || '').trim() : '';
+    }
 
-function showAll() {
-    showAllRows();
-    document.getElementById('showAllButton').style.display = 'none';
-    isFiltered = false;
-}
+    function normalizar(valor) {
+        return String(valor || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
 
-function showAllRows() {
-    const movimentacoes = getMovimentacoes();
-    movimentacoes.forEach(row => {
-        row.classList.remove('hidden-row');
-    });
-}
+    function aplicarAjustesVisuaisPbdoc() {
+        /* Mantém os botões/ações existentes do ENFAS. Apenas organiza a tela no
+         * padrão estrutural do PBdoc e remove hacks antigos que não pertencem ao
+         * exibe.jsp original. */
+        var fallback = $id('btn-assinar-fallback');
+        if (fallback) fallback.remove();
 
-function applyCombinedFilters() {
-	//Usuario clica no botão filtrar e chama essa função
-    const selectedLotacoes = Array.from(document.getElementById('lotacaoSelect').selectedOptions).map(option => option.value);
-    let isLotacaoFilterActive = false;
-    isLotacaoFilterActive = selectedLotacoes.length > 0;
+        var voltar = document.querySelector('button[name="voltar"]');
+        if (voltar) voltar.remove();
 
-    const modelosSelecionados = removerAcentos(getModelosSelecionados());
-    let isModeloFilterActive = false;
-    isModeloFilterActive = modelosSelecionados.length > 0;
-	
-	const especiesSelecionadas = removerAcentos(getEspeciesSelecionadas());
-	let isEspecieFilterActive = false;
-    isEspecieFilterActive = especiesSelecionadas.length > 0;
-	
-    const movimentacoes = getMovimentacoes();
-	
-    movimentacoes.forEach(row => {
-        const lotacaoMatches = !isLotacaoFilterActive || selectedLotacoes.includes(row.querySelector('td:nth-child(2)').textContent.trim());
-        const documento = getDocumentoDaMovimentacao(row);
-        const modeloDoDocumento = removerAcentos(getModeloDoDocumento(documento));
-        
-        //Busca a espécie do documento da movimentação atual
-        const especieDoDocumento = removerAcentos(getEspecieDoDocumento(documento));
-        
-        //Obtem a lista de especies selecionada no Selectbox(Que vieram do Endpoint)
-        //Obtem a lista dos documentos das movimentações
-        //Verifica se movimentaçãoAtual/documento/especie está entre as especies selecionadas
-        	//Se estiver, exibe 
-        const modeloMatches = !isModeloFilterActive || modelosSelecionados.includes(modeloDoDocumento);
-        if (especiesSelecionadas[0] == especieDoDocumento){
-			console.log("especiesSelecionadas[0] == especieDoDocumento");
-		} else{
-			 console.log("especiesSelecionadas[0] != especieDoDocumento")
-		}
-	
-		const especieMatches = !isEspecieFilterActive || podeAplicarFiltroPorEspecie(especiesSelecionadas, especieDoDocumento);
+        var css = document.createElement('style');
+        css.id = 'enfas-exibe-pbdoc-css';
+        css.textContent = [
+            '#page.container-fluid.content{padding-left:20px;padding-right:20px;}',
+            '.siga-menu-acoes{margin-bottom:.35rem;}',
+            '.siga-menu-acoes .btn{margin-right:.2rem;margin-bottom:.2rem;}',
+            '.gt-sidebar .card-sidebar{margin-bottom:.75rem!important;}',
+            '.gt-sidebar .card-header{padding:.55rem .85rem;}',
+            '.gt-sidebar .card-body{padding:.75rem .9rem;}',
+            '.sigla-documento{margin-bottom:.35rem;}',
+            '#movsTable{margin-top:.4rem;}',
+            '#movsTable th,#movsTable td{vertical-align:middle;}',
+            '.select2-container{width:100%!important;}',
+            '.enfas-filtro-historico{margin-bottom:.75rem;}',
+            '.enfas-filtro-historico label{margin-bottom:.2rem;}',
+            '.container-files{position:relative;}',
+            '.files .btn.btn-sm.btn-light{width:84%;text-align:left;}',
+            '@media (max-width:767.98px){#page.container-fluid.content{padding-left:10px;padding-right:10px}.gt-sidebar{margin-top:1rem;}}'
+        ].join('\n');
+        if (!$id(css.id)) document.head.appendChild(css);
+    }
 
-		if (lotacaoMatches && modeloMatches && especieMatches) {
+    function removerDuplicados(select) {
+        if (!select) return;
+        var vistos = new Set();
+        Array.from(select.options).forEach(function (op) {
+            var chave = normalizar(op.value || op.text);
+            if (vistos.has(chave)) op.remove();
+            else vistos.add(chave);
+        });
+    }
+
+    function ordenarSelect(select) {
+        if (!select) return;
+        var opcoes = Array.from(select.options);
+        opcoes.sort(function (a, b) {
+            return a.text.localeCompare(b.text, 'pt-BR', { sensitivity: 'base' });
+        });
+        opcoes.forEach(function (op) { select.appendChild(op); });
+    }
+
+    function inicializarSelect2() {
+        if (!window.jQuery || !jQuery.fn || !jQuery.fn.select2) return;
+        ['lotacaoSelect', 'modeloSelect', 'especieSelect'].forEach(function (id) {
+            var el = $id(id);
+            if (!el) return;
+            var $el = jQuery(el);
+            if ($el.hasClass('select2-hidden-accessible')) $el.select2('destroy');
+            $el.select2({ width: '100%', closeOnSelect: false });
+            $el.removeClass('default-select');
+        });
+    }
+
+    function preencherSelect(select, itens, valueFn, textFn) {
+        if (!select || !Array.isArray(itens)) return;
+        var valores = new Set(Array.from(select.options).map(function (op) {
+            return normalizar(op.value + '|' + op.text);
+        }));
+        itens.forEach(function (item) {
+            var value = valueFn(item);
+            var label = textFn(item);
+            if (!label) return;
+            var chave = normalizar(value + '|' + label);
+            if (valores.has(chave)) return;
+            valores.add(chave);
+            var op = document.createElement('option');
+            op.value = value == null ? label : value;
+            op.text = label;
+            select.appendChild(op);
+        });
+        ordenarSelect(select);
+        removerDuplicados(select);
+    }
+
+    function carregarEspecies() {
+        var select = $id('especieSelect');
+        if (!select || !window.jQuery) return;
+        jQuery.ajax({
+            url: '/sigaex/api/v1/especies',
+            dataType: 'json',
+            timeout: 15000,
+            success: function (result) {
+                var especies = result && Array.isArray(result.especies) ? result.especies : [];
+                preencherSelect(select, especies,
+                    function (e) { return Array.isArray(e) ? e[0] : (e.id || e.idEspecie); },
+                    function (e) { return Array.isArray(e) ? e[1] : (e.nome || e.descricao); });
+                inicializarSelect2();
+            }
+        });
+    }
+
+    function carregarModelos() {
+        var select = $id('modeloSelect');
+        if (!select || !window.jQuery) return;
+        jQuery.ajax({
+            url: '/sigaex/api/v1/modelos/lista-hierarquica',
+            dataType: 'json',
+            timeout: 15000,
+            success: function (result) {
+                var modelos = result && Array.isArray(result.list) ? result.list : [];
+                preencherSelect(select, modelos,
+                    function (m) { return m.idModelo || m.id; },
+                    function (m) { return m.nome || m.descricao; });
+                inicializarSelect2();
+            }
+        });
+    }
+
+    function selecionados(id) {
+        var select = $id(id);
+        if (!select) return [];
+        return Array.from(select.selectedOptions || []).map(function (op) {
+            return normalizar(op.text || op.value);
+        });
+    }
+
+    function getDocumentoDaMovimentacao(row) {
+        if (!row || !row.cells || row.cells.length < 4) return '';
+        var link = row.cells[3].querySelector('a');
+        return texto(link);
+    }
+
+    var cacheDocumento = Object.create(null);
+
+    function consultarDetalhes(sigla) {
+        sigla = compactarSigla(sigla);
+        if (!sigla) return null;
+        if (Object.prototype.hasOwnProperty.call(cacheDocumento, sigla)) return cacheDocumento[sigla];
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/sigaex/api/v1/documentos/' + encodeURIComponent(sigla) + '/detalhes', false);
+            xhr.send();
+            if (xhr.status >= 200 && xhr.status < 300) {
+                cacheDocumento[sigla] = JSON.parse(xhr.responseText || '{}');
+                return cacheDocumento[sigla];
+            }
+        } catch (e) {
+            console.warn('Não foi possível consultar detalhes do documento', sigla, e);
+        }
+        cacheDocumento[sigla] = null;
+        return null;
+    }
+
+    function modeloDoDocumento(sigla) {
+        var d = consultarDetalhes(sigla);
+        return normalizar(d && (d.nomeDoModelo || d.modelo || d.modeloNome));
+    }
+
+    function especieDoDocumento(sigla) {
+        var d = consultarDetalhes(sigla);
+        return normalizar(d && (d.especie || d.especieNome || d.forma));
+    }
+
+    function aplicarFiltro() {
+        var lotacoes = selecionados('lotacaoSelect');
+        var modelos = selecionados('modeloSelect');
+        var especies = selecionados('especieSelect');
+        var rows = document.querySelectorAll('#movsTable tbody tr');
+
+        rows.forEach(function (row) {
+            var lotacao = row.cells && row.cells[1] ? normalizar(texto(row.cells[1])) : '';
+            var documento = getDocumentoDaMovimentacao(row);
+            var okLotacao = !lotacoes.length || lotacoes.indexOf(lotacao) >= 0;
+            var okModelo = true;
+            var okEspecie = true;
+
+            if (modelos.length && documento) okModelo = modelos.indexOf(modeloDoDocumento(documento)) >= 0;
+            if (especies.length && documento) okEspecie = especies.indexOf(especieDoDocumento(documento)) >= 0;
+
+            row.classList.toggle('hidden-row', !(okLotacao && okModelo && okEspecie));
+        });
+
+        var verTodos = $id('showAllButton');
+        if (verTodos) verTodos.style.display = 'inline-block';
+    }
+
+    function mostrarTodos() {
+        document.querySelectorAll('#movsTable tbody tr').forEach(function (row) {
             row.classList.remove('hidden-row');
-        } else {
-            row.classList.add('hidden-row');
-        }
-    });
-}
-
-function podeAplicarFiltroPorEspecie(listaDeEspeciesSelecionadas, especieDoDocumentoAtual){
-	// Verifica se os parâmetros fornecidos são válidos
-    if (listaDeEspeciesSelecionadas && especieDoDocumentoAtual) {
-        // Itera sobre a lista de espécies selecionadas
-        for (let i = 0; i < listaDeEspeciesSelecionadas.length; i++) {
-            // Compara a espécie atual da lista com a espécie do documento
-            if (listaDeEspeciesSelecionadas[i] == especieDoDocumentoAtual) {
-                // Se encontrar uma correspondência, retorna verdadeiro
-                return true;
-            }
-        }
+        });
+        var verTodos = $id('showAllButton');
+        if (verTodos) verTodos.style.display = 'none';
     }
-    // Se chegar ao final do loop sem encontrar correspondência, retorna falso
-    return false;
-}
 
-function removerAcentos(str) {
-    return str;
-}
-
-function getModelosSelecionados() {
-	let selectElement = document.getElementById('modeloSelect');
-    if (!selectElement) {
-        console.error('Elemento select não fornecido');
-        return [];
-    }
-    var selectedOptions = selectElement.selectedOptions;
-    var modelosSelecionados = Array.from(selectedOptions).map(function(option) {
-        return option.text;
-    });
-    return modelosSelecionados;
-}
-
-function getEspeciesSelecionadas() {
-	//Busca somente as espécies selecionadas pelo usuário
-	let selectElement = document.getElementById('especieSelect');
-    if (!selectElement) {
-        console.error('Elemento select não fornecido');
-        return [];
-    }
-    var selectedOptions = selectElement.selectedOptions;
-    var especiesSelecionadas = Array.from(selectedOptions).map(function(option) {
-        return option.text;
-    });
-    return especiesSelecionadas;
-}
-
-function getMovimentacoes(){
-	return document.querySelectorAll('#movsTable tbody tr');
-}
-
-function getDocumentoDaMovimentacao(movimentacao) {
-    // Obtém a quarta célula (td) da movimentação
-    const celulaDocumento = movimentacao.cells[3];
-    
-    if (celulaDocumento) {
-        // Encontra o primeiro elemento <a> dentro da célula do documento
-        const elementoDocumento = celulaDocumento.querySelector('a');
-        
-        // Se o elemento <a> foi encontrado, extrai o texto do documento
-        if (elementoDocumento) {
-            const documento = elementoDocumento.textContent.trim();
-            return documento;
-        } else {
-            console.error('Elemento <a> não encontrado na célula do documento');
-            return null;
+    function prepararFiltros() {
+        var lotacao = $id('lotacaoSelect');
+        if (lotacao) {
+            ordenarSelect(lotacao);
+            removerDuplicados(lotacao);
         }
+        var filtrar = $id('filterButton');
+        var todos = $id('showAllButton');
+        if (filtrar) filtrar.onclick = aplicarFiltro;
+        if (todos) {
+            todos.onclick = mostrarTodos;
+            todos.style.display = 'none';
+        }
+        inicializarSelect2();
+        carregarModelos();
+        carregarEspecies();
+    }
+
+    function init() {
+        aplicarAjustesVisuaisPbdoc();
+        prepararFiltros();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
     } else {
-        console.error('Célula do documento não encontrada');
-        return null;
+        init();
     }
-}
 
-function getModeloDoDocumento(SiglaDoDocumentoDaMovimentacao) {
-	//Retorna o modelo de um documento
-	let nomeDoModelo = getNomeDoModeloDoDocumentoBySigla(SiglaDoDocumentoDaMovimentacao);	
-    return nomeDoModelo;
-}
-
-function getEspecieDoDocumento(SiglaDoDocumentoDaMovimentacao) {
-	//Retorna a espécie de um documento
-	let especie = getEspecieDoDocumentoBySigla(SiglaDoDocumentoDaMovimentacao);	
-    return especie;
-}
-
-function getNomeDoModeloDoDocumentoBySigla(sigla) {
-    var xhr = new XMLHttpRequest();
-    var url = window.location.origin + '/sigaex/api/v1/documentos/' + compactarSigla(sigla) + '/consultar-modelo';
-    xhr.open('GET', url, false); // false para requisição síncrona
-    try {
-        xhr.send();
-        if (xhr.status === 200) {
-            var resposta = JSON.parse(xhr.responseText);
-            return resposta.nomeDoModelo;
-        } else {
-            console.error('Erro na API: ' + xhr.status);
-            return 'Modelo Desconhecido';
-        }
-    } catch (erro) {
-        console.error('Erro na requisição: ' + erro);
-        return 'Modelo Desconhecido';
-    }
-}
-
-function getEspecieDoDocumentoBySigla(sigla) {
-    var xhr = new XMLHttpRequest();
-    var url = window.location.origin + '/sigaex/api/v1/documentos/' + compactarSigla(sigla) + '/consultar-especie';
-    xhr.open('GET', url, false); // false para requisição síncrona
-    try {
-        xhr.send();
-        if (xhr.status === 200) {
-            var resposta = JSON.parse(xhr.responseText);
-            return resposta.especie;
-        } else {
-            console.error('Erro na API: ' + xhr.status);
-            return 'Modelo Desconhecido';
-        }
-    } catch (erro) {
-        console.error('Erro na requisição: ' + erro);
-        return 'Modelo Desconhecido';
-    }
-}
-
-function compactarSigla(sigla) {
-    if (sigla === null || sigla === undefined) {
-        return null;
-    }
-    return sigla.replace(/-/g, "").replace(/\//g, "");
-}
-
-
-function getDocumentoBySigla(sigla) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/sigaex/api/v1/documentos/" + compactarSigla(sigla), false); // false para requisição síncrona
-    xhr.setRequestHeader("Content-Type", "application/json");
-
-    try {
-        xhr.send();
-        if (xhr.status === 200) {
-            return JSON.parse(xhr.responseText);
-        } else {
-            console.error('Erro ao buscar documento: ' + xhr.statusText);
-            return null;
-        }
-    } catch (err) {
-        console.error('Erro ao buscar documento: ' + err);
-        return null;
-    }
-}
-
-function getModeloById(id) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/sigaex/api/v1/modelos/" + id, false); // false para requisição síncrona
-    xhr.setRequestHeader("Content-Type", "application/json");
-
-    try {
-        xhr.send();
-        if (xhr.status === 200) {
-            return JSON.parse(xhr.responseText);
-        } else {
-            console.error('Erro ao buscar modelo: ' + xhr.statusText);
-            return null;
-        }
-    } catch (err) {
-        console.error('Erro ao buscar modelo: ' + err);
-        return null;
-    }
-}
-
-function formataSigla(sigla) {
-	if (sigla === null || sigla === undefined) {
-        return null;
-    }
-    return sigla.replace("/", "").replace("-", "");
-}
-
-function compactarSigla(sigla) {
-    if (sigla === null || sigla === undefined) {
-        return null;
-    }
-    return sigla.replace(/-/g, "").replace(/\//g, "");
-}
-
-function getDocumentoPelaSigla(siglaDoDocumento){
-    url = "/sigaex/api/v1/documentos/{sigla}";
-    url = url.replace("{sigla}", siglaDoDocumento);
-    console.log("url" + url);
-    let documento = null;
-    $.ajax({
-        url: url,
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(result) {
-            documento = result;
-        },
-        error: function(result) {
-            console.log("Erro ao buscar documento: " + result.errormsg);
-        },
-    });    
-    return documento;
-}
-
-function ordenaOpcoesOrdemAlfabetica(selectElement) {
-    const options = Array.from(selectElement.options);
-    options.sort((a, b) => a.text.localeCompare(b.text));
-    selectElement.innerHTML = '';
-    options.forEach(option => selectElement.add(option));
-}
-
-function removeDuplicateOptions() {
-    let select = document.getElementById('lotacaoSelect');
-    let seenOptions = new Set();
-    // Iterar sobre as opções da combobox em ordem reversa
-    for (let i = select.options.length - 1; i >= 0; i--) {
-        let optionValue = select.options[i].value;
-        // Se o valor já foi visto, remova a opção
-        if (seenOptions.has(optionValue)) {
-            select.remove(i);
-        } else {
-            seenOptions.add(optionValue);
-        }
-    }
-}
-
-let isFiltered = false;
-
-function showAllRows() {
-    const tableRows = document.querySelectorAll('#movsTable tbody tr');
-    tableRows.forEach(row => {
-        row.classList.remove('hidden-row');
-    });
-}
-
-function getModelosFromSigaExAPI() {
-    $.ajax({
-        url: "/sigaex/api/v1/modelos/lista-hierarquica",
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(result) {
-            if (result.list && result.list.length > 0) {
-                addModelosToSelect(result.list);
-            } else {
-                console.log("Nenhum modelo encontrado.");
-            }
-        },
-        error: function(result) {
-            console.log("Erro ao buscar modelos: " + result.errormsg);
-        },
-    });
-}
-
-function addModelosToSelect(modelos) {
-    var select = document.getElementById('modeloSelect');
-    modelos.forEach(function(modelo) {
-        var option = document.createElement('option');
-        option.value = modelo.idModelo;
-        option.text = modelo.nome;
-        select.appendChild(option);
-    });
-}
-
-function isMovimentacaoDoModeloSelecionado(modeloSelecionado, movimentacao) {
-	let documentoDaMovimentacao = getDocumentoDaMovimentacao(movimentacao);
-    let modeloDoDocumento = getModeloDoDocumento(documentoDaMovimentacao);
-    return modeloDoDocumento === modeloSelecionado;
-}
-
-function isMovimentacaoDaEspecieSelecionada(especieSelecionada, movimentacao) {
-	let documentoDaMovimentacao = getDocumentoDaMovimentacao(movimentacao);
-    let especieDoDocumento = getEspecieDoDocumento(documentoDaMovimentacao);
-    return especieDoDocumento === especieSelecionada;
-}
-
-async function buscaIdPorSigla(sigla) {
-    var siglaFormatted = formataSigla(sigla);
-    try {
-        let documentoId = await consultaApiPorSigla(siglaFormatted);
-        return documentoId;
-    } catch (error) {
-        console.error('Erro ao buscar ID:', error);
-        throw error; 
-    }
-}
-
-async function consultaApiPorSigla(siglaFormatted) {
-    var response = await fetch('/sigaex/api/v1/documentos/${siglaFormatted}/detalhes', {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer your_jwt_token_here"
-        }
-    });
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-    var documento = await response.json();
-    return documento.id; 
-}
-
-document.addEventListener('DOMContentLoaded', init);
+    /* Mantém compatibilidade com chamadas inline já existentes no exibe.jsp. */
+    window.applyFilter = aplicarFiltro;
+    window.showAll = mostrarTodos;
+    window.showAllRows = mostrarTodos;
+    window.compactarSigla = compactarSigla;
+})();
