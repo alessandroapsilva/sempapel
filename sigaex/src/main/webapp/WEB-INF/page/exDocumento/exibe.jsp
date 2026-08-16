@@ -254,20 +254,6 @@
 					<c:if test="${docVO.doc ne null}">
 						<small class="iiiu text-muted" title="Link Permanente: Identificador Incremental Interno Único (ID)">
 							<a href="${pageContext.request.contextPath}/app/documento/${docVO.doc.id}">#${docVO.doc.id}</a>
-							<c:if test="${(f:resource('/siga.ambiente') eq 'desenv') or (cadastrante.sesbPessoa eq 'ZZZ')}">
-								<script>
-									function copiar(targetComponentName) {
-										const component = document.getElementById(targetComponentName);
-										component.select();
-										navigator.clipboard.writeText(component.value);
-										alert('Localização do arquivo copiada para a área de transferência.');
-									}
-								</script>
-								<input type="hidden" id="docPathInput" name="doc-path-input" value="${f:referenciaArquivo(docVO.doc).getAbsolutePath()}" />
-								<button type="button" class="btn btn-sm btn-link" title="Localização do documento: ${f:referenciaArquivo(docVO.doc).getAbsolutePath()} (clique para copiar)" onclick="copiar('docPathInput')">
-									<i class="fa fa-folder"></i>
-								</button>
-							</c:if>
 						</small>
 					</c:if>
 				</c:if>
