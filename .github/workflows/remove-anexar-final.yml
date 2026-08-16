@@ -1,0 +1,65 @@
+name: Remover Anexar final
+
+on:
+  push:
+    branches:
+      - release/11.5
+    paths:
+      - .github/workflows/remove-anexar-final.yml
+
+permissions:
+  contents: write
+
+jobs:
+  remover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+
+      - name: Remover somente o botão Anexar customizado do exibe.jsp
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE='sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp'
+
+          echo 'ANTES:'
+          grep -n 'title="Anexar documento"' "$FILE" || true
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
+          s = p.read_text(encoding='utf-8')
+          alvo = '\t\t\t\t\t\t<a class="btn btn-info" href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>\n'
+          if alvo not in s:
+              raise SystemExit('ERRO: linha exata do botão Anexar não encontrada; nada foi alterado')
+          s2 = s.replace(alvo, '', 1)
+          if s2.count('title="Anexar documento"') != 0:
+              raise SystemExit('ERRO: ainda existe botão Anexar customizado no exibe.jsp')
+          p.write_text(s2, encoding='utf-8')
+          PY
+
+          echo 'DEPOIS:'
+          if grep -n 'title="Anexar documento"' "$FILE"; then
+            echo 'ERRO: botão ainda existe'
+            exit 1
+          else
+            echo 'OK - BOTAO ANEXAR REMOVIDO DO EXIBE.JSP'
+          fi
+
+      - name: Commit da correção
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          if git diff --cached --quiet; then
+            echo 'Nada para commitar'
+            exit 0
+          fi
+          git commit -m 'Remove botão Anexar customizado do exibe.jsp'
+          git push origin HEAD:release/11.5
