@@ -344,9 +344,13 @@
 
         var voltar = document.querySelector('button[name="voltar"]');
         if (voltar) {
-            voltar.className = 'btn btn-info';
-            voltar.innerHTML = 'Volta<u>r</u>';
-            voltar.style.cssText = '';
+            if (window.location.pathname.indexOf('/app/expediente/doc/exibir') >= 0) {
+                voltar.parentNode.removeChild(voltar);
+            } else {
+                voltar.className = 'btn btn-info';
+                voltar.innerHTML = 'Volta<u>r</u>';
+                voltar.style.cssText = '';
+            }
         }
     }
 
