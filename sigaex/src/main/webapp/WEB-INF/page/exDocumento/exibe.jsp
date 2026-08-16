@@ -240,7 +240,8 @@
 			<h2>
 				<c:if test="${empty ocultarCodigo}">${docVO.sigla}
 				</c:if>
-</h2>
+				<button type="button" name="voltar" onclick="${(empty param.linkVolta) ? 'javascript:window.location.href=\'/siga\';' : 'javascript:'.concat(param.linkVolta) }" class="btn btn-secondary float-right ${hide_only_TRF2}" accesskey="r">Volta<u>r</u></button>				
+			</h2>
 		</div>
 	</div>
 	<c:set var="primeiroMobil" value="${true}" />
@@ -257,6 +258,7 @@
 				<c:if test='${param.popup!="true"}'>
 					<c:set var="acoes" value="${m.acoesOrdenadasPorNome}" />
 					<siga:links>
+						<a class="btn btn-info" href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>
 						<c:forEach var="acao" items="${acoes}">
 							<siga:link icon="${acao.icone}" title="${acao.nomeNbsp}"
 								pre="${acao.pre}" pos="${acao.pos}"
@@ -269,11 +271,6 @@
 								test="${acao.pode}" />
 						</c:forEach>
 					</siga:links>
-					<a class="btn btn-info btn-sm ml-1"
-						href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}"
-						title="Anexar documento">
-						<i class="fas fa-paperclip"></i> Anexar
-					</a>
 				</c:if>
 			</div>
 		</div>
@@ -1102,7 +1099,7 @@
 								<b>Suporte:</b> ${docVO.fisicoOuEletronico}
 							</p>
 							<p>
-								<b>Data:</b> 
+								<b><fmt:message key="documento.data.assinatura"/>:</b> 
 								<c:choose>
 									<c:when test="${not empty docVO.dataPrimeiraAssinatura}">
 										${docVO.dataPrimeiraAssinatura}
