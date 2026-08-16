@@ -258,6 +258,7 @@
 				<c:if test='${param.popup!="true"}'>
 					<c:set var="acoes" value="${m.acoesOrdenadasPorNome}" />
 					<siga:links>
+						<a class="btn btn-info" href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>
 						<c:forEach var="acao" items="${acoes}">
 							<siga:link icon="${acao.icone}" title="${acao.nomeNbsp}"
 								pre="${acao.pre}" pos="${acao.pos}"
