@@ -1,0 +1,39 @@
+name: Restaura exibe original e Anexar
+on:
+  push:
+    branches: [ release/11.5 ]
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+      - name: Restaurar exibe oficial e inserir somente Anexar
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE=sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          curl -fsSL https://raw.githubusercontent.com/projeto-siga/siga/release/11.5/sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp -o "$FILE"
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
+          s=p.read_text(encoding='utf-8')
+          old='''\t\t\t\t\t<siga:links>\n\t\t\t\t\t\t<c:forEach var="acao" items="${acoes}">'''
+          new='''\t\t\t\t\t<siga:links>\n\t\t\t\t\t\t<a class="btn btn-info" href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>\n\t\t\t\t\t\t<c:forEach var="acao" items="${acoes}">'''
+          if old not in s:
+              raise SystemExit('Ponto de insercao nao encontrado no exibe.jsp oficial')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commitar e remover workflow temporário
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          git commit -m "Restaura exibe.jsp original e adiciona somente Anexar" || true
+          git push origin HEAD:release/11.5
