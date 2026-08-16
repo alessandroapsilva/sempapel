@@ -1,0 +1,44 @@
+name: Restaura exibe oficial puro
+
+on:
+  push:
+    branches:
+      - release/11.5
+    paths:
+      - '.github/workflows/restaura-exibe-oficial-puro-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  restaurar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+
+      - name: Restaurar exibe.jsp exatamente da release oficial 11.5
+        run: |
+          set -euo pipefail
+          ARQ='sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp'
+          curl -fsSL 'https://raw.githubusercontent.com/projeto-siga/siga/release/11.5/sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp' -o "$ARQ"
+
+          # Garantia: nenhuma customização nossa de botão Anexar permanece.
+          if grep -n 'Anexar documento' "$ARQ"; then
+            echo 'ERRO: encontrou customização inesperada'
+            exit 1
+          fi
+
+          git diff -- "$ARQ" | head -200 || true
+
+      - name: Commitar restauração e remover workflow temporário
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/restaura-exibe-oficial-puro-once.yml
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp .github/workflows/restaura-exibe-oficial-puro-once.yml
+          git commit -m 'Restaura exibe.jsp original puro do SIGA 11.5' || exit 0
+          git push origin HEAD:release/11.5
