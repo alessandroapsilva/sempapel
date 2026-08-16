@@ -192,6 +192,11 @@
         if (voltar) { voltar.className = 'btn btn-info'; voltar.innerHTML = 'Volta<u>r</u>'; }
     }
 
+    function hideExibeVoltar() {
+        if (window.location.pathname.indexOf('/app/expediente/doc/exibir') < 0) return;
+        $('button[name="voltar"]').remove();
+    }
+
     function annotateFields() {
         $('#frm input, #frm select, #frm textarea').each(function() {
             var name = friendlyName(this);
@@ -223,6 +228,7 @@
     }
 
     function install() {
+        hideExibeVoltar();
         if (window.location.pathname.indexOf('/app/expediente/doc/editar') < 0) return;
         annotateFields();
         patchModal();
