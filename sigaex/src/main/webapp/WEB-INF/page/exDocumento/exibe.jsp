@@ -16,21 +16,6 @@
 <c:set var="exibirExplicacao" scope="request" value="${libs:podeExibirRegraDeNegocioEmBotoes(titular, lotaTitular)}" />
 <siga:pagina titulo="${docVO.sigla}" popup="${param.popup}" >
 
-<script type="text/javascript">
-(function() {
-    sessionStorage.removeItem('redirecionarParaAssinatura');
-    sessionStorage.removeItem('siglaParaAssinar');
-
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('assinar') === 'true') {
-        var sigla = params.get('sigla') || '';
-        if (sigla && sigla !== 'Novo Documento' && sigla !== 'NOVO') {
-            window.location.replace('/sigaex/app/expediente/mov/assinar?sigla=' + encodeURIComponent(sigla));
-        }
-    }
-})();
-</script>
-
 <style>									
 	.container-files {
 		opacity: 1;
@@ -135,6 +120,8 @@
 	.tabela-ordenavel tbody a {
 		pointer-events: none;
 	}
+	
+							
 </style>						
 
 <script>
@@ -221,7 +208,7 @@
 	function escapeAcentos(s) {
 		//Edson: o replace abaixo é necessário porque o viz.js não monta o gráfico corretamente se
 		//houver caracteres com acento...
-		return s.replace(/[ãâáàÃÂÀÁêéÊÉôõóÔÕÓúÚçÇ]/gim, function(i) {
+		return s.replace(/[ãâáàÃÁÀÂêéÊÉôõóÔÕÓúÚçÇ]/gim, function(i) {
 			return '&#' + i.charCodeAt(0) + ';';
 		});
 	}
@@ -231,6 +218,8 @@
 		frm.elements["sigla"].value = sigla;
 		frm.action = '/sigaex/app/expediente/mov/cancelar_movimentacao_gravar';
 		frm.submit();
+		//alert(id);
+		//alert(frm.elements["sigla"].value);
 	}
 </script>
 
@@ -248,16 +237,10 @@
 				<input type="hidden" id="id" name="id"/> <input type="hidden" id="sigla" name="sigla"/>
 				<input type="hidden" id="visualizador" value="${f:resource('/sigaex.pdf.visualizador') }"/>
 			</form>
-			<h2 class="sigla-documento">
-				<c:if test="${empty ocultarCodigo}">
-					${docVO.sigla}
-					<c:if test="${docVO.doc ne null}">
-						<small class="iiiu text-muted" title="Link Permanente: Identificador Incremental Interno Único (ID)">
-							<a href="${pageContext.request.contextPath}/app/documento/${docVO.doc.id}">#${docVO.doc.id}</a>
-						</small>
-					</c:if>
+			<h2>
+				<c:if test="${empty ocultarCodigo}">${docVO.sigla}
 				</c:if>
-			</h2>
+</h2>
 		</div>
 	</div>
 	<c:set var="primeiroMobil" value="${true}" />
@@ -355,6 +338,8 @@
 						<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 						<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 						<script src="/sigaex/javascript/filtroHistoricoDeMovimentacoes.js"></script>
+						
+<script src="/sigaex/javascript/filtroHistoricoDeMovimentacoes.js"></script>
 
 <style>
     .hidden-row {
@@ -492,14 +477,6 @@
 					<c:if test="${m.pendencias}">
 						<div class="card-sidebar card bg-light mb-3" id="pendencias">
 							<tags:collapse title="Pendências" id="Pendencias" collapseMode="${collapse_Expanded}">
-								<c:if test="${not empty m.pendenciaProximoModelo}">
-									<p style="margin-bottom: 3px;"><b style="color: rgb(195, 0, 0)">Próximo Documento:</b></p>
-									<ul>
-										<c:if test="${m.pendenciaProximoModelo == 110}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Despacho de Concessão de Diárias" style="text-decoration: none">Despacho de Concessão de Diárias</a></li></c:if>
-										<c:if test="${m.pendenciaProximoModelo == 111}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Registro de Pagamento de Diárias" style="text-decoration: none">Registro de Pagamento de Diárias</a></li></c:if>
-										<c:if test="${m.pendenciaProximoModelo == 112}"><li><a href="${pageContext.request.contextPath}/app/expediente/doc/editar?mobilPaiSel.sigla=${m.sigla}&criandoAnexo=true" title="Certidão de Publicação de Diárias" style="text-decoration: none">Certidão de Publicação de Diárias</a></li></c:if>
-									</ul>
-								</c:if>
 								<c:if test="${not empty m.pendenciasDeAnexacao}">
 									<p style="margin-bottom: 3px;">
 										<b style="color: rgb(195, 0, 0)">Anexos Pendentes:</b>
@@ -635,6 +612,15 @@
 							<tags:collapse title="${docVO.outrosMobsLabel}" id="OutrosMob" collapseMode="${collapse_Expanded}" addToTitle="${butRefresh}" classInfo="m-0 p-0">
 								<div class="table-responsive">
 								<table class="table table-sm mb-0 w-100">
+								<!-- <thead class="align-middle text-center">
+									<tr>
+										<th class="text-left"></th>
+										<th class="text-left">Marca</th>
+										<th class="text-left"><fmt:message key="usuario.pessoa"/></th>
+										<th class="text-left"><fmt:message key="usuario.lotacao"/></th>
+										<th class="text-left">Texto</th>
+									</tr>
+								</thead> -->
 								<tbody>
 									<c:forEach var="entry" items="${docVO.marcasDeSistemaPorMobil}">
 										<c:set var="outroMob" value="${entry.key}" />
