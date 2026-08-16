@@ -1,0 +1,56 @@
+name: Adapta detalhes e Anexar exibe one-shot
+on:
+  push:
+    branches: [ "release/11.5" ]
+    paths: [ ".github/workflows/adapta-exibe-detalhes-anexar-once.yml" ]
+permissions:
+  contents: write
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+      - name: Adaptar exibe.jsp
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
+          s = p.read_text(encoding='utf-8')
+
+          # 1) No card de propriedades, manter a data real já usada pela release 11.5,
+          # mas apresentar o rótulo simples "Data", como no layout desejado.
+          old = '<b><fmt:message key="documento.data.assinatura"/>:</b>'
+          if old not in s:
+              raise SystemExit('ERRO: bloco de data não encontrado')
+          s = s.replace(old, '<b>Data:</b>', 1)
+
+          # 2) Adicionar botão Anexar ao lado das ações normais, apontando para a função
+          # nativa da própria release 11.5. Não altera os demais botões/ações.
+          needle = '''\t\t\t\t\t</siga:links>\n\t\t\t\t</c:if>'''
+          insert = '''\t\t\t\t\t</siga:links>\n\t\t\t\t\t<a class="btn btn-info btn-sm ml-1"\n\t\t\t\t\t\thref="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}"\n\t\t\t\t\t\ttitle="Anexar documento">\n\t\t\t\t\t\t<i class="fas fa-paperclip"></i> Anexar\n\t\t\t\t\t</a>\n\t\t\t\t</c:if>'''
+          if needle not in s:
+              raise SystemExit('ERRO: ponto das ações não encontrado')
+          s = s.replace(needle, insert, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          echo '=== Conferência ==='
+          grep -n -A3 -B2 '<b>Data:</b>' sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          grep -n -A4 -B2 'title="Anexar documento"' sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp
+          if grep -q 'referenciaArquivo' sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp; then
+            echo 'ERRO: referenciaArquivo incompatível reapareceu'
+            exit 1
+          fi
+      - name: Commitar e remover workflow temporário
+        shell: bash
+        run: |
+          rm -f .github/workflows/adapta-exibe-detalhes-anexar-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp .github/workflows/adapta-exibe-detalhes-anexar-once.yml
+          git commit -m 'Adapta detalhes do documento e adiciona botão Anexar' || exit 0
+          git push origin release/11.5
