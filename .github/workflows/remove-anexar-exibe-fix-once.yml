@@ -1,0 +1,55 @@
+name: Remove Anexar injetado no exibe one-shot
+
+on:
+  push:
+    branches: [ release/11.5 ]
+    paths:
+      - '.github/workflows/remove-anexar-exibe-fix-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  aplicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+
+      - name: Remover customização do exibe do JS ENFAS
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('sigaex/src/main/webapp/javascript/enfas-documento-fix.js')
+          s = p.read_text(encoding='utf-8')
+
+          # Remove toda a função que alterava o exibe.jsp (Voltar/Anexar).
+          pattern = r"\n    function installExibeActions\(\) \{.*?\n    \}\n\n    function install\(\) \{"
+          repl = "\n    function install() {"
+          ns, n = re.subn(pattern, repl, s, count=1, flags=re.S)
+          if n != 1:
+              raise SystemExit('ERRO: bloco installExibeActions não encontrado exatamente uma vez')
+
+          # Remove a chamada que ainda restaria, se houver.
+          ns = ns.replace('        installExibeActions();\n', '')
+
+          # Segurança: o JS de edição não pode mais criar botão Anexar nem mexer no exibe.
+          if 'enfas-btn-anexar' in ns or "'/app/expediente/doc/exibir'" in ns:
+              raise SystemExit('ERRO: ainda restou customização do exibe no JS')
+
+          p.write_text(ns, encoding='utf-8')
+
+      - name: Commitar correção e remover workflow temporário
+        shell: bash
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/remove-anexar-exibe-fix-once.yml
+          git add -A
+          git commit -m 'Remove injeção do botão Anexar no exibe' || exit 0
+          git push origin HEAD:release/11.5
