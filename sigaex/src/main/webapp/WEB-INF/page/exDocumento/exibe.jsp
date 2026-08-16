@@ -269,6 +269,11 @@
 								test="${acao.pode}" />
 						</c:forEach>
 					</siga:links>
+					<a class="btn btn-info btn-sm ml-1"
+						href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}"
+						title="Anexar documento">
+						<i class="fas fa-paperclip"></i> Anexar
+					</a>
 				</c:if>
 			</div>
 		</div>
@@ -1097,7 +1102,7 @@
 								<b>Suporte:</b> ${docVO.fisicoOuEletronico}
 							</p>
 							<p>
-								<b><fmt:message key="documento.data.assinatura"/>:</b> 
+								<b>Data:</b> 
 								<c:choose>
 									<c:when test="${not empty docVO.dataPrimeiraAssinatura}">
 										${docVO.dataPrimeiraAssinatura}
