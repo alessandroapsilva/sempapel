@@ -444,25 +444,15 @@
 					<!-- BOTÕES -->
 					<div class="row mt-4">
 						<div class="col-sm-8">
-							<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição">
-								<i class="fas fa-save"></i> <u>G</u>ravar
-							</button>
+							<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição"><u>G</u>ravar</button>
 							&nbsp;
-							<button id="btnFinalizarAssinar" type="button" onclick="javascript: gravarAssinarDoc(); return false;" name="finalizareGravar" class="btn btn-success" accesskey="f" title="Finalizar documento em definitivo e em seguida realizar assinatura digital">
-								<i class="fas fa-check-circle"></i> <u>F</u>inalizar e Assinar
-							</button>
+							<button id="btnFinalizarAssinar" type="button" onclick="javascript: gravarAssinarDoc(); return false;" name="finalizareGravar" class="btn btn-primary" accesskey="f" title="Finalizar documento em definitivo e em seguida realizar assinatura digital"><u>F</u>inalizar e Assinar</button>
 							&nbsp;
-							<button type="button" name="ver_doc" onclick="javascript: popitup_documento(false); return false;" class="btn btn-info" accesskey="v" title="Visualizar o documento gerado">
-								<i class="fas fa-file-alt"></i> <u>V</u>er Documento
-							</button>
+							<button type="button" name="ver_doc" onclick="javascript: popitup_documento(false); return false;" class="btn btn-info" accesskey="v" title="Visualizar o documento gerado"><u>V</u>er Documento</button>
 							&nbsp;
-							<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-secondary" accesskey="i" title="Visualizar versão para impressão (PDF)">
-								<i class="fas fa-print"></i> Ver <u>I</u>mpressão
-							</button>
+							<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-info" accesskey="i" title="Visualizar versão para impressão (PDF)">Ver <u>I</u>mpressão</button>
 							&nbsp;
-							<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-outline-dark" accesskey="r" title="Voltar à página anterior">
-								<i class="fas fa-arrow-left"></i> Volta<u>r</u>
-							</button>
+							<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-info" accesskey="r" title="Voltar à página anterior">Volta<u>r</u></button>
 						</div>
 					</div>
 				</form>

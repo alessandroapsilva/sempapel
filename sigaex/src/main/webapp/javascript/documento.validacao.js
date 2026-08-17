@@ -153,39 +153,69 @@ function obterPrimeiroCampoInvalidoDocumento() {
 	return campo.length > 0 ? campo[0] : null;
 }
 
+function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
+	function vazio(nome) {
+		var el = $('[name="' + nome + '"]').first();
+		if (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
+		return !String(el.val() || '').trim();
+	}
+
+	function selecaoVazia(nomeSigla) {
+		var sigla = $('[name="' + nomeSigla + '"]').first();
+		if (sigla.length == 0 || !campoDeveAparecerNoResumoDocumento(sigla)) return false;
+		var id = $('[name="' + nomeSigla.replace('Sel.sigla', 'Sel.id') + '"]').first();
+		return !String((id.length ? id.val() : sigla.val()) || '').trim();
+	}
+
+	if (vazio('exDocumentoDTO.descrDocumento')) return 'Assunto';
+
+	var tipo = $('[name="exDocumentoDTO.tipoDestinatario"]').val();
+	if (tipo == '1' && selecaoVazia('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
+	if (tipo == '2' && selecaoVazia('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
+	if (tipo == '3' && selecaoVazia('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
+	if (tipo && tipo != '1' && tipo != '2' && tipo != '3' && vazio('exDocumentoDTO.nmDestinatario')) return 'Destinatário - Campo Livre';
+
+	if (selecaoVazia('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
+	if ($('#substitutoSwitch').is(':checked') && selecaoVazia('exDocumentoDTO.titularSel.sigla')) return 'Substituto Responsável pela Assinatura';
+	if (selecaoVazia('exDocumentoDTO.classificacaoSel.sigla')) return 'Tipo Documental';
+
+	if (mensagens && mensagens.length) {
+		var m = String(mensagens[0] || '')
+			.replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
+			.replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
+			.replace(/[.'"]+$/g, '').trim();
+		if (m) return m;
+	}
+	return 'Campo obrigatório';
+}
+
 function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
 	var elemento = obterPrimeiroCampoInvalidoDocumento();
-	var cabecalho = finalizar
-			? 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar e assinar:'
-			: 'Os seguintes campos obrigatórios precisam ser preenchidos antes de gravar:';
-	var msg = cabecalho + '\n\n- ' + mensagens.join('\n- ');
+	var nomeCampo = obterCampoObrigatorioPrioritarioDocumento(mensagens);
+	var msg = "Preencha o campo '" + nomeCampo + "' antes de gravar o documento.";
 
 	if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
 		var modal = sigaModal.alerta(msg);
-		if (modal && typeof modal.focus === 'function') {
-			modal.focus(elemento);
-		}
+		if (modal && typeof modal.focus === 'function') modal.focus(elemento);
 	} else {
 		alert(msg);
-		if (elemento && typeof elemento.focus === 'function') {
-			elemento.focus();
-		}
+		if (elemento && typeof elemento.focus === 'function') elemento.focus();
 	}
 }
 
 function validarCamposObrigatoriosEditaDocumento() {
 	validarCampoObrigatorioDocumento('exDocumentoDTO.dtDocString', 'Favor preencher o campo data');
-	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Favor preencher o campo responsável pela assinatura');
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');
 
 	if ($('#substitutoSwitch').is(':checked')) {
-		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla', 'Favor preencher o campo substituto do responsável pela assinatura');
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla', 'Substituto Responsável pela Assinatura');
 	} else {
 		removerErroCampoDocumento('exDocumentoDTO.titularSel.sigla');
 	}
 
 	validarDestinatarioObrigatorioDocumento();
-	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla', 'Favor preencher o campo classificação documental');
-	validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento', 'Favor preencher o campo assunto');
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla', 'Tipo Documental');
+	validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento', 'Assunto');
 	validarCamposRequiredDocumento();
 }
 
