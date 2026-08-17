@@ -132,24 +132,18 @@ function validar(silencioso, finalizar) {
 		return !$(this).is('input[type="hidden"]');
 	});
 	if (camposInvalidos.length > 0) {
-		if (!silencioso
-				&& typeof obterMensagensCamposInvalidosDocumento === 'function'
-				&& typeof exibirModalCamposObrigatoriosDocumento === 'function') {
-			var mensagens = obterMensagensCamposInvalidosDocumento();
-
-			if (mensagens.length > 0) {
-				exibirModalCamposObrigatoriosDocumento(mensagens, !!finalizar);
-				return false;
-			}
+		if (!silencioso) {
+			var assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
+			var primeiro = (assunto.length > 0 && assunto.hasClass('is-invalid')) ? assunto : camposInvalidos.first();
+			var nomeCampo = '';
+			if (typeof obterNomeCampoDocumento === 'function') nomeCampo = obterNomeCampoDocumento(primeiro);
+			if (typeof limparNomeCampoDocumento === 'function') nomeCampo = limparNomeCampoDocumento(nomeCampo);
+			if (!nomeCampo && primeiro.is(assunto)) nomeCampo = 'Assunto';
+			if (!nomeCampo) nomeCampo = 'Campo obrigatório';
+			var acao = finalizar ? 'finalizar e assinar o documento' : 'gravar o documento';
+			aviso("Preencha o campo '" + nomeCampo + "' antes de " + acao + ".", false, primeiro[0]);
+			return false;
 		}
-
-		var mensagem = 'Favor verificar os campos destacados';
-
-		if (camposInvalidos.length == 1) {
-			mensagem = 'Favor verificar o campo destacado';
-		}
-
-		aviso(mensagem, silencioso, camposInvalidos[0]);
 		return false;
 	}
 
