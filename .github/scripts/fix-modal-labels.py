@@ -29,14 +29,15 @@ replacement = '''function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
 \t\t\t.trim();
 \t\tif (m) return m;
 \t}
-\n\treturn 'Campo obrigatório';
+
+\treturn 'Campo obrigatório';
 }
 
 function exibirModalCamposObrigatoriosDocumento'''
 
-s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
+s2, n = re.subn(pattern, lambda m: replacement, s, count=1, flags=re.S)
 if n != 1:
-    raise SystemExit('funcao prioritária nao encontrada')
+    raise SystemExit('funcao prioritaria nao encontrada')
 s = s2
 
 s = s.replace("validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');", "validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla');")
