@@ -1,10 +1,11 @@
-name: Corrige modal com nomes reais dos campos
+name: Corrige modal nomes reais
 
 on:
   push:
-    branches: [ release/11.5 ]
+    branches:
+      - release/11.5
     paths:
-      - '.github/workflows/corrige-modal-nomes-campos-once.yml'
+      - .github/workflows/corrige-modal-nomes-campos-once.yml
 
 permissions:
   contents: write
@@ -17,77 +18,14 @@ jobs:
         with:
           ref: release/11.5
           fetch-depth: 0
-
-      - name: Aplicar correção
-        shell: bash
+      - name: Aplicar
+        run: python3 .github/scripts/fix-modal-labels.py
+      - name: Commitar
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('sigaex/src/main/webapp/javascript/documento.validacao.js')
-          s = p.read_text(encoding='utf-8')
-
-          pattern = r"function obterCampoObrigatorioPrioritarioDocumento\(mensagens\) \{.*?\n\}\n\nfunction exibirModalCamposObrigatoriosDocumento"
-          replacement = r'''function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
-	/* Assunto é sempre o primeiro campo obrigatório a ser avisado. */
-	var assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
-	if (assunto.length > 0 && campoDeveAparecerNoResumoDocumento(assunto)
-			&& !String(assunto.val() || '').trim()) {
-		return limparNomeCampoDocumento(obterNomeCampoDocumento(assunto)) || 'Assunto';
-	}
-
-	/* Depois do Assunto, usa EXATAMENTE o nome exibido no próprio formulário. */
-	var invalido = $('#frm').find('.is-invalid').filter(function() {
-		return campoDeveAparecerNoResumoDocumento($(this));
-	}).first();
-
-	if (invalido.length > 0) {
-		var nomeReal = limparNomeCampoDocumento(obterNomeCampoDocumento(invalido));
-		if (nomeReal) return nomeReal;
-	}
-
-	/* Fallback: tenta extrair o nome real da mensagem já produzida pela validação nativa. */
-	if (mensagens && mensagens.length) {
-		var m = String(mensagens[0] || '')
-			.replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/[.'\"]+$/g, '')
-			.trim();
-		if (m) return m;
-	}
-
-	return 'Campo obrigatório';
-}
-
-function exibirModalCamposObrigatoriosDocumento'''
-
-          s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
-          if n != 1:
-              raise SystemExit('ERRO: função obterCampoObrigatorioPrioritarioDocumento não encontrada')
-          s = s2
-
-          # Não inventa nomes: deixa a validação nativa buscar o label real do campo.
-          s = s.replace("validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');",
-                        "validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla');")
-          s = s.replace("validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla', 'Substituto Responsável pela Assinatura');",
-                        "validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla');")
-          s = s.replace("validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla', 'Tipo Documental');",
-                        "validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla');")
-          s = s.replace("validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento', 'Assunto');",
-                        "validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento');")
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Commitar correção
-        shell: bash
-        run: |
-          set -euo pipefail
           git config user.name "ENFAS Bot"
           git config user.email "enfas@users.noreply.github.com"
           rm -f .github/workflows/corrige-modal-nomes-campos-once.yml
-          git add sigaex/src/main/webapp/javascript/documento.validacao.js .github/workflows/corrige-modal-nomes-campos-once.yml
+          rm -f .github/scripts/fix-modal-labels.py
+          git add sigaex/src/main/webapp/javascript/documento.validacao.js .github/workflows/corrige-modal-nomes-campos-once.yml .github/scripts/fix-modal-labels.py
           git commit -m "Usa nomes reais dos campos no modal e prioriza Assunto"
           git push origin HEAD:release/11.5
