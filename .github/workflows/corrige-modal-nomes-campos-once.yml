@@ -29,3 +29,4 @@ jobs:
           git add sigaex/src/main/webapp/javascript/documento.validacao.js .github/workflows/corrige-modal-nomes-campos-once.yml .github/scripts/fix-modal-labels.py
           git commit -m "Usa nomes reais dos campos no modal e prioriza Assunto"
           git push origin HEAD:release/11.5
+# execucao 2
