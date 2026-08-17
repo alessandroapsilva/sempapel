@@ -186,6 +186,14 @@ function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
 	var nomeCampo = obterCampoObrigatorioPrioritarioDocumento(mensagens);
 	var msg = "Preencha o campo '" + nomeCampo + "' antes de gravar o documento.";
 
+	/* Padrão PBdoc: obrigatório é informado somente no modal, sem pintar campos de vermelho. */
+	$('#frm').find('.is-invalid').each(function() {
+		var campo = $(this);
+		removerElementoInvalido(campo);
+		removerLabelInvalido(campo);
+		obterMensagemDivErro(campo).text('');
+	});
+
 	if (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
 		var modal = sigaModal.alerta(msg);
 		if (modal && typeof modal.focus === 'function') modal.focus(elemento);

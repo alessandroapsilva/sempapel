@@ -447,7 +447,7 @@
 							<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição"><u>G</u>ravar</button> 
 							<button id="btnFinalizarAssinar" type="button" onclick="javascript: gravarAssinarDoc(); return false;" name="finalizareGravar" class="btn btn-primary" accesskey="f" title="Finalizar documento em definitivo e em seguida realizar assinatura digital"><u>F</u>inalizar e Assinar</button>
 							<c:if test='${exDocumentoDTO.tipoDocumento == "interno"}'>
-								<button type="button" name="ver_doc" onclick="javascript: popitup_documento(false); return false;" class="btn btn-info ${hide_only_GOVSP}" accesskey="v"><u>V</u>er Documento</button>
+								<button type="button" name="ver_doc" onclick="javascript: popitup_documento(false); return false;" class="btn btn-info" accesskey="v" title="Visualizar o documento gerado"><u>V</u>er Documento</button>
 									<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-info" accesskey="i"><fmt:message key="documento.btn.ver.impressao2"/></button>
 									<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-info" accesskey="r">Volta<u>r</u></button>
 							</c:if>
@@ -458,7 +458,7 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-modal-20260817-3"></script>
+	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-final-20260817-3"></script>
 </siga:pagina>
 
 <script type="text/javascript">
