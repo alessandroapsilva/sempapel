@@ -240,7 +240,8 @@
 			<h2>
 				<c:if test="${empty ocultarCodigo}">${docVO.sigla}
 				</c:if>
-</h2>
+				<button type="button" name="voltar" onclick="${(empty param.linkVolta) ? 'javascript:window.location.href=\'/siga\';' : 'javascript:'.concat(param.linkVolta) }" class="btn btn-secondary float-right ${hide_only_TRF2}" accesskey="r">Volta<u>r</u></button>				
+			</h2>
 		</div>
 	</div>
 	<c:set var="primeiroMobil" value="${true}" />
@@ -257,7 +258,8 @@
 				<c:if test='${param.popup!="true"}'>
 					<c:set var="acoes" value="${m.acoesOrdenadasPorNome}" />
 					<siga:links>
-<c:forEach var="acao" items="${acoes}">
+						<a class="btn btn-info" href="${pageContext.request.contextPath}/app/expediente/mov/anexar?sigla=${m.sigla}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>
+						<c:forEach var="acao" items="${acoes}">
 							<siga:link icon="${acao.icone}" title="${acao.nomeNbsp}"
 								pre="${acao.pre}" pos="${acao.pos}"
 								url="${pageContext.request.contextPath}${acao.url}"
