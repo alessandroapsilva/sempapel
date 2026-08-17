@@ -154,38 +154,30 @@ function obterPrimeiroCampoInvalidoDocumento() {
 }
 
 function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
-	function vazio(nome) {
-		var el = $('[name="' + nome + '"]').first();
-		if (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
-		return !String(el.val() || '').trim();
+	var assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
+	if (assunto.length > 0 && campoDeveAparecerNoResumoDocumento(assunto)
+			&& !String(assunto.val() || '').trim()) {
+		return limparNomeCampoDocumento(obterNomeCampoDocumento(assunto)) || 'Assunto';
 	}
 
-	function selecaoVazia(nomeSigla) {
-		var sigla = $('[name="' + nomeSigla + '"]').first();
-		if (sigla.length == 0 || !campoDeveAparecerNoResumoDocumento(sigla)) return false;
-		var id = $('[name="' + nomeSigla.replace('Sel.sigla', 'Sel.id') + '"]').first();
-		return !String((id.length ? id.val() : sigla.val()) || '').trim();
+	var invalido = $('#frm').find('.is-invalid').filter(function() {
+		return campoDeveAparecerNoResumoDocumento($(this));
+	}).first();
+
+	if (invalido.length > 0) {
+		var nomeReal = limparNomeCampoDocumento(obterNomeCampoDocumento(invalido));
+		if (nomeReal) return nomeReal;
 	}
-
-	if (vazio('exDocumentoDTO.descrDocumento')) return 'Assunto';
-
-	var tipo = $('[name="exDocumentoDTO.tipoDestinatario"]').val();
-	if (tipo == '1' && selecaoVazia('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
-	if (tipo == '2' && selecaoVazia('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
-	if (tipo == '3' && selecaoVazia('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
-	if (tipo && tipo != '1' && tipo != '2' && tipo != '3' && vazio('exDocumentoDTO.nmDestinatario')) return 'Destinatário - Campo Livre';
-
-	if (selecaoVazia('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
-	if ($('#substitutoSwitch').is(':checked') && selecaoVazia('exDocumentoDTO.titularSel.sigla')) return 'Substituto Responsável pela Assinatura';
-	if (selecaoVazia('exDocumentoDTO.classificacaoSel.sigla')) return 'Tipo Documental';
 
 	if (mensagens && mensagens.length) {
 		var m = String(mensagens[0] || '')
 			.replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
 			.replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/[.'"]+$/g, '').trim();
+			.replace(/[.'\"]+$/g, '')
+			.trim();
 		if (m) return m;
 	}
+
 	return 'Campo obrigatório';
 }
 
@@ -205,17 +197,17 @@ function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
 
 function validarCamposObrigatoriosEditaDocumento() {
 	validarCampoObrigatorioDocumento('exDocumentoDTO.dtDocString', 'Favor preencher o campo data');
-	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla', 'Responsável pela Assinatura');
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.subscritorSel.sigla');
 
 	if ($('#substitutoSwitch').is(':checked')) {
-		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla', 'Substituto Responsável pela Assinatura');
+		validarSelecaoObrigatoriaDocumento('exDocumentoDTO.titularSel.sigla');
 	} else {
 		removerErroCampoDocumento('exDocumentoDTO.titularSel.sigla');
 	}
 
 	validarDestinatarioObrigatorioDocumento();
-	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla', 'Tipo Documental');
-	validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento', 'Assunto');
+	validarSelecaoObrigatoriaDocumento('exDocumentoDTO.classificacaoSel.sigla');
+	validarCampoObrigatorioDocumento('exDocumentoDTO.descrDocumento');
 	validarCamposRequiredDocumento();
 }
 
