@@ -454,7 +454,12 @@ function aplicarMensagemErro(elemento, mensagem) {
 	
 	if (mensagemDiv.length > 0) {
 		mensagemDiv.attr('data-nome-campo-documento', obterNomeCampoDocumento(elemento));
-		if (elemento[0].type === 'radio' || elemento[0].type === 'checkbox') {
+
+		/* PBdoc: campo obrigatório fica destacado, mas o texto aparece somente no modal. */
+		var somenteModal = /^Favor\s+(preencher|selecionar|selecione|informar)\b/i.test(String(mensagem || ''));
+		if (somenteModal) {
+			mensagemDiv.text('');
+		} else if (elemento[0].type === 'radio' || elemento[0].type === 'checkbox') {
 			mensagemDiv.text('');
 			mensagemDiv.last().text(mensagem);
 		} else {
