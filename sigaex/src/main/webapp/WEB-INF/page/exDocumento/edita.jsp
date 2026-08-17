@@ -68,6 +68,7 @@
 					<input type="hidden" name="exDocumentoDTO.autuando" value="${exDocumentoDTO.autuando}" />
 					<input type="hidden" name="exDocumentoDTO.criandoAnexo" value="${exDocumentoDTO.criandoAnexo}" />
 					<input type="hidden" name="exDocumentoDTO.criandoSubprocesso" value="${exDocumentoDTO.criandoSubprocesso}" />
+					<input type="hidden" name="exDocumentoDTO.mobilPaiSel.sigla" value="${exDocumentoDTO.mobilPaiSel.sigla}" />
 					<input type="hidden" name="campos" value="idMobilAutuado" />
 					<input type="hidden" name="exDocumentoDTO.idMobilAutuado" value="${exDocumentoDTO.idMobilAutuado}" />
 					<input type="hidden" name="exDocumentoDTO.id" value="${exDocumentoDTO.doc.idDoc}" />
@@ -620,6 +621,11 @@
 					setUserSessionStorage('lastQry', qry);
 					setUserSessionStorage('modelos', JSON.stringify(result.list));
 					carregaModelos(ulMod, result.list);
+				} else {
+					if (typeof sigaSpinner !== 'undefined' && sigaSpinner.ocultar) sigaSpinner.ocultar();
+					$('#select-spinner').remove();
+					$('.selected-label .disabled').remove();
+					$('.selected-label').text('Nenhum modelo disponível');
 				}
 			},
 			error : function() {
@@ -629,6 +635,8 @@
 	}
 
 	function carregaModelos(ulMod, listMod) {
+		$('#select-spinner').remove();
+		$('.selected-label .disabled').remove();
 		for (var i = 0; i < listMod.length; i++) {
 			var item = listMod[i];
 			var liMod = "<li class='dropdown-item' data-value='" + item.idModelo
