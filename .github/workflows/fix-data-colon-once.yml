@@ -37,9 +37,19 @@ jobs:
       - name: Commitar correcao e remover workflow temporario
         shell: bash
         run: |
-          rm -f .github/workflows/fix-data-colon-once.yml
           git config user.name "ENFAS Bot"
           git config user.email "enfas@users.noreply.github.com"
+          git pull --rebase origin release/11.5
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
+          s = p.read_text(encoding='utf-8')
+          antigo = '<b><fmt:message key="documento.data.assinatura"/>:</b>'
+          novo = '<b><fmt:message key="documento.data.assinatura"/></b>'
+          if antigo in s:
+              p.write_text(s.replace(antigo, novo, 1), encoding='utf-8')
+          PY
+          rm -f .github/workflows/fix-data-colon-once.yml
           git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp .github/workflows/fix-data-colon-once.yml
           git commit -m "Corrige dois pontos duplicado na Data do exibe.jsp"
           git push origin HEAD:release/11.5
