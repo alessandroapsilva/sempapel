@@ -28,3 +28,5 @@ jobs:
           git add -A
           git commit -m "Restaura Ver Documento e deixa obrigatorios so no modal"
           git push origin HEAD:release/11.5
+
+# segunda execução após correção do script
