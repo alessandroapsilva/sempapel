@@ -1,0 +1,101 @@
+name: Corrige modal PBdoc final
+
+on:
+  push:
+    branches: [ release/11.5 ]
+    paths:
+      - '.github/workflows/corrige-modal-pbdoc-final-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  corrigir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+
+      - name: Aplicar comportamento PBdoc
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          js = Path('sigaex/src/main/webapp/javascript/exDocumentoEdita.js')
+          s = js.read_text(encoding='utf-8')
+          old = '''\tif (camposInvalidos.length > 0) {
+\t\tif (!silencioso
+\t\t\t\t&& typeof obterMensagensCamposInvalidosDocumento === 'function'
+\t\t\t\t&& typeof exibirModalCamposObrigatoriosDocumento === 'function') {
+\t\t\tvar mensagens = obterMensagensCamposInvalidosDocumento();
+
+\t\t\tif (mensagens.length > 0) {
+\t\t\t\texibirModalCamposObrigatoriosDocumento(mensagens, !!finalizar);
+\t\t\t\treturn false;
+\t\t\t}
+\t\t}
+
+\t\tvar mensagem = 'Favor verificar os campos destacados';
+
+\t\tif (camposInvalidos.length == 1) {
+\t\t\tmensagem = 'Favor verificar o campo destacado';
+\t\t}
+
+\t\taviso(mensagem, silencioso, camposInvalidos[0]);
+\t\treturn false;
+\t}'''
+          new = '''\tif (camposInvalidos.length > 0) {
+\t\tif (!silencioso) {
+\t\t\t/* PBdoc: mostra somente o primeiro campo obrigatório pendente. Assunto vem primeiro. */
+\t\t\tvar assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
+\t\t\tvar primeiro = null;
+
+\t\t\tif (assunto.length > 0 && assunto.hasClass('is-invalid')) {
+\t\t\t\tprimeiro = assunto;
+\t\t\t} else {
+\t\t\t\tprimeiro = camposInvalidos.first();
+\t\t\t}
+
+\t\t\tvar nomeCampo = '';
+\t\t\tif (typeof obterNomeCampoDocumento === 'function') {
+\t\t\t\tnomeCampo = obterNomeCampoDocumento(primeiro);
+\t\t\t}
+\t\t\tif (typeof limparNomeCampoDocumento === 'function') {
+\t\t\t\tnomeCampo = limparNomeCampoDocumento(nomeCampo);
+\t\t\t}
+\t\t\tif (!nomeCampo && primeiro.is(assunto)) nomeCampo = 'Assunto';
+\t\t\tif (!nomeCampo) nomeCampo = 'Campo obrigatório';
+
+\t\t\tvar acao = finalizar ? 'finalizar e assinar o documento' : 'gravar o documento';
+\t\t\taviso("Preencha o campo '" + nomeCampo + "' antes de " + acao + ".", false, primeiro[0]);
+\t\t\treturn false;
+\t\t}
+
+\t\treturn false;
+\t}'''
+          if old not in s:
+              raise SystemExit('Bloco de validação atual não encontrado')
+          js.write_text(s.replace(old, new, 1), encoding='utf-8')
+
+          jsp = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp')
+          t = jsp.read_text(encoding='utf-8')
+          t = t.replace('../../../javascript/exDocumentoEdita.js"></script>', '../../../javascript/exDocumentoEdita.js?v=pbdoc-final-20260817"></script>', 1)
+          jsp.write_text(t, encoding='utf-8')
+          PY
+
+      - name: Commitar
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "ENFAS Bot"
+          git config user.email "enfas@users.noreply.github.com"
+          rm -f .github/workflows/corrige-modal-pbdoc-final-once.yml
+          git add sigaex/src/main/webapp/javascript/exDocumentoEdita.js \
+                  sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp \
+                  .github/workflows/corrige-modal-pbdoc-final-once.yml
+          git commit -m "Faz modal de obrigatórios igual ao PBdoc"
+          git push origin HEAD:release/11.5
