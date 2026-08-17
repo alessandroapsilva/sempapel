@@ -1,10 +1,11 @@
-name: Restaura edita PBdoc pontualmente
+name: Restaura edita PBdoc
 
 on:
   push:
-    branches: [ release/11.5 ]
+    branches:
+      - release/11.5
     paths:
-      - '.github/workflows/restaura-edita-pbdoc-once.yml'
+      - .github/workflows/restaura-edita-pbdoc-once.yml
 
 permissions:
   contents: write
@@ -17,141 +18,15 @@ jobs:
         with:
           ref: release/11.5
           fetch-depth: 0
-
-      - name: Restaurar botões e modal no código nativo
-        shell: bash
+      - name: Aplicar correção
+        run: python3 .github/scripts/restaura_edita_pbdoc.py
+      - name: Commitar correção
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          jsp = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp')
-          s = jsp.read_text(encoding='utf-8')
-
-          replacements = [
-              (
-                  r'<button id="btnGravar" type="button" onclick="javascript: gravarDoc\(\); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição">\s*<i class="fas fa-save"></i>\s*<u>G</u>ravar\s*</button>',
-                  '<button id="btnGravar" type="button" onclick="javascript: gravarDoc(); return false;" name="gravar" class="btn btn-primary" accesskey="g" title="Apenas grava o documento podendo continuar a Edição"><u>G</u>ravar</button>'
-              ),
-              (
-                  r'<button id="btnFinalizarAssinar" type="button" onclick="javascript: gravarAssinarDoc\(\); return false;" name="finalizareGravar" class="btn btn-success" accesskey="f" title="Finalizar documento em definitivo e em seguida realizar assinatura digital">\s*<i class="fas fa-check-circle"></i>\s*<u>F</u>inalizar e Assinar\s*</button>',
-                  '<button id="btnFinalizarAssinar" type="button" onclick="javascript: gravarAssinarDoc(); return false;" name="finalizareGravar" class="btn btn-primary" accesskey="f" title="Finalizar documento em definitivo e em seguida realizar assinatura digital"><u>F</u>inalizar e Assinar</button>'
-              ),
-              (
-                  r'<button type="button" name="ver_doc" onclick="javascript: popitup_documento\(false\); return false;" class="btn btn-info" accesskey="v" title="Visualizar o documento gerado">\s*<i class="fas fa-file-alt"></i>\s*<u>V</u>er Documento\s*</button>',
-                  '<button type="button" name="ver_doc" onclick="javascript: popitup_documento(false); return false;" class="btn btn-info" accesskey="v" title="Visualizar o documento gerado"><u>V</u>er Documento</button>'
-              ),
-              (
-                  r'<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento\(true\); return false;" class="btn btn-secondary" accesskey="i" title="Visualizar versão para impressão \(PDF\)">\s*<i class="fas fa-print"></i>\s*Ver <u>I</u>mpressão\s*</button>',
-                  '<button type="button" name="ver_doc_pdf" onclick="javascript: popitup_documento(true); return false;" class="btn btn-info" accesskey="i" title="Visualizar versão para impressão (PDF)">Ver <u>I</u>mpressão</button>'
-              ),
-              (
-                  r'<button type="button" name="voltar" onclick="javascript: history\.back\(\);" class="btn btn-outline-dark" accesskey="r" title="Voltar à página anterior">\s*<i class="fas fa-arrow-left"></i>\s*Volta<u>r</u>\s*</button>',
-                  '<button type="button" name="voltar" onclick="javascript: history.back();" class="btn btn-info" accesskey="r" title="Voltar à página anterior">Volta<u>r</u></button>'
-              ),
-          ]
-
-          for pattern, replacement in replacements:
-              s2, n = re.subn(pattern, replacement, s, count=1, flags=re.S)
-              if n != 1:
-                  raise SystemExit(f'ERRO: bloco de botão não encontrado exatamente: {pattern[:70]}')
-              s = s2
-
-          jsp.write_text(s, encoding='utf-8')
-
-          js = Path('sigaex/src/main/webapp/javascript/documento.validacao.js')
-          v = js.read_text(encoding='utf-8')
-
-          old = '''function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
-\tvar elemento = obterPrimeiroCampoInvalidoDocumento();
-\tvar cabecalho = finalizar
-\t\t\t? 'Os seguintes campos obrigatórios precisam ser preenchidos antes de finalizar e assinar:'
-\t\t\t: 'Os seguintes campos obrigatórios precisam ser preenchidos antes de gravar:';
-\tvar msg = cabecalho + '\\n\\n- ' + mensagens.join('\\n- ');
-
-\tif (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-\t\tvar modal = sigaModal.alerta(msg);
-\t\tif (modal && typeof modal.focus === 'function') {
-\t\t\tmodal.focus(elemento);
-\t\t}
-\t} else {
-\t\talert(msg);
-\t\tif (elemento && typeof elemento.focus === 'function') {
-\t\t\telemento.focus();
-\t\t}
-\t}
-}'''
-
-          new = '''function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
-\tfunction vazio(nome) {
-\t\tvar el = $('[name="' + nome + '"]').first();
-\t\tif (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
-\t\treturn !String(el.val() || '').trim();
-\t}
-
-\tfunction selecaoVazia(nomeSigla) {
-\t\tvar sigla = $('[name="' + nomeSigla + '"]').first();
-\t\tif (sigla.length == 0 || !campoDeveAparecerNoResumoDocumento(sigla)) return false;
-\t\tvar id = $('[name="' + nomeSigla.replace('Sel.sigla', 'Sel.id') + '"]').first();
-\t\treturn !String((id.length ? id.val() : sigla.val()) || '').trim();
-\t}
-
-\tif (vazio('exDocumentoDTO.descrDocumento')) return 'Assunto';
-
-\tvar tipo = $('[name="exDocumentoDTO.tipoDestinatario"]').val();
-\tif (tipo == '1' && selecaoVazia('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
-\tif (tipo == '2' && selecaoVazia('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
-\tif (tipo == '3' && selecaoVazia('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
-\tif (tipo && tipo != '1' && tipo != '2' && tipo != '3' && vazio('exDocumentoDTO.nmDestinatario')) return 'Destinatário - Campo Livre';
-
-\tif (selecaoVazia('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
-\tif ($('#substitutoSwitch').is(':checked') && selecaoVazia('exDocumentoDTO.titularSel.sigla')) return 'Substituto Responsável pela Assinatura';
-\tif (selecaoVazia('exDocumentoDTO.classificacaoSel.sigla')) return 'Tipo Documental';
-
-\tif (mensagens && mensagens.length) {
-\t\tvar m = String(mensagens[0] || '')
-\t\t\t.replace(/^Favor\\s+(preencher|informar|selecionar)\\s+(o\\s+|a\\s+)?campo\\s*/i, '')
-\t\t\t.replace(/^Preencha\\s+(o\\s+|a\\s+)?campo\\s*/i, '')
-\t\t\t.replace(/[.'\"]+$/g, '')
-\t\t\t.trim();
-\t\tif (m) return m;
-\t}
-\treturn 'Campo obrigatório';
-}
-
-function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
-\tvar elemento = obterPrimeiroCampoInvalidoDocumento();
-\tvar nomeCampo = obterCampoObrigatorioPrioritarioDocumento(mensagens);
-\tvar msg = "Preencha o campo '" + nomeCampo + "' antes de gravar o documento.";
-
-\tif (typeof sigaModal !== 'undefined' && typeof sigaModal.alerta === 'function') {
-\t\tvar modal = sigaModal.alerta(msg);
-\t\tif (modal && typeof modal.focus === 'function') modal.focus(elemento);
-\t} else {
-\t\talert(msg);
-\t\tif (elemento && typeof elemento.focus === 'function') elemento.focus();
-\t}
-}'''
-
-          if old not in v:
-              raise SystemExit('ERRO: função atual do modal não encontrada')
-          v = v.replace(old, new, 1)
-
-          # Nomes usados na validação nativa para manter a terminologia aprovada.
-          v = v.replace("'Favor preencher o campo substituto do responsável pela assinatura'", "'Substituto Responsável pela Assinatura'")
-          v = v.replace("'Favor preencher o campo classificação documental'", "'Tipo Documental'")
-          v = v.replace("'Favor preencher o campo assunto'", "'Assunto'")
-          v = v.replace("'Favor preencher o campo responsável pela assinatura'", "'Responsável pela Assinatura'")
-
-          js.write_text(v, encoding='utf-8')
-          PY
-
           git config user.name "ENFAS Bot"
           git config user.email "enfas@users.noreply.github.com"
-          rm -f .github/workflows/restaura-edita-pbdoc-once.yml
-          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp \
-                  sigaex/src/main/webapp/javascript/documento.validacao.js \
-                  .github/workflows/restaura-edita-pbdoc-once.yml
+          git rm .github/workflows/restaura-edita-pbdoc-once.yml
+          git rm .github/scripts/restaura_edita_pbdoc.py
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
+          git add sigaex/src/main/webapp/javascript/documento.validacao.js
           git commit -m "Restaura botões e modal nativos no padrão PBdoc"
           git push origin HEAD:release/11.5
