@@ -18,47 +18,54 @@ jobs:
           ref: release/11.5
           fetch-depth: 0
 
-      - name: Aplicar correcoes pontuais
+      - name: Atualizar branch, corrigir exibe e commitar
         shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          p = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
-          s = p.read_text(encoding='utf-8')
-
-          # Data: a mensagem i18n ja traz os dois pontos.
-          s = s.replace('<b><fmt:message key="documento.data.assinatura"/>:</b>',
-                        '<b><fmt:message key="documento.data.assinatura"/></b>', 1)
-
-          # Remove somente o botao Voltar do cabecalho do documento.
-          s = re.sub(r'\n?\s*<button type="button" name="voltar".*?</button>\s*', '\n', s, count=1, flags=re.S)
-
-          # Remove somente o Anexar hardcoded; mantem as acoes nativas do SIGA.
-          s = re.sub(r'\n?\s*<a class="btn btn-info" href="\$\{pageContext\.request\.contextPath\}/app/expediente/mov/anexar\?sigla=\$\{m\.sigla\}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>\s*', '\n', s, count=1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Atualizar branch, reaplicar e commitar
-        shell: bash
-        run: |
-          set -e
+          set -euo pipefail
           git config user.name "ENFAS Bot"
           git config user.email "enfas@users.noreply.github.com"
           git pull --rebase origin release/11.5
+
           python3 - <<'PY'
           from pathlib import Path
           import re
+
           p = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp')
           s = p.read_text(encoding='utf-8')
-          s = s.replace('<b><fmt:message key="documento.data.assinatura"/>:</b>', '<b><fmt:message key="documento.data.assinatura"/></b>', 1)
-          s = re.sub(r'\n?\s*<button type="button" name="voltar".*?</button>\s*', '\n', s, count=1, flags=re.S)
-          s = re.sub(r'\n?\s*<a class="btn btn-info" href="\$\{pageContext\.request\.contextPath\}/app/expediente/mov/anexar\?sigla=\$\{m\.sigla\}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>\s*', '\n', s, count=1)
-          p.write_text(s, encoding='utf-8')
+          original = s
+
+          # A chave i18n ja traz "Data:", portanto remove somente o ':' duplicado do JSP.
+          s = s.replace(
+              '<b><fmt:message key="documento.data.assinatura"/>:</b>',
+              '<b><fmt:message key="documento.data.assinatura"/></b>',
+              1
+          )
+
+          # Remove somente o botao Voltar customizado no cabecalho.
+          s = re.sub(
+              r'\n?\s*<button type="button" name="voltar".*?</button>\s*',
+              '\n', s, count=1, flags=re.S
+          )
+
+          # Remove somente o link Anexar hardcoded, preservando as acoes nativas do SIGA.
+          s = re.sub(
+              r'\n?\s*<a class="btn btn-info" href="\$\{pageContext\.request\.contextPath\}/app/expediente/mov/anexar\?sigla=\$\{m\.sigla\}" title="Anexar documento"><i class="fas fa-paperclip"></i> Anexar</a>\s*',
+              '\n', s, count=1
+          )
+
+          if s == original:
+              print('Nenhuma alteracao necessaria no exibe.jsp')
+          else:
+              p.write_text(s, encoding='utf-8')
           PY
+
           rm -f .github/workflows/fix-data-colon-once.yml
           git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/exibe.jsp .github/workflows/fix-data-colon-once.yml
+
+          if git diff --cached --quiet; then
+            echo "Nada para commitar"
+            exit 0
+          fi
+
           git commit -m "Corrige Data e remove Anexar e Voltar customizados do exibe.jsp"
           git push origin HEAD:release/11.5
