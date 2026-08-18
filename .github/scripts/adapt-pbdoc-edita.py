@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+# Reaplica a adaptação visual: somente * vermelho nos campos obrigatórios.
 jsp = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp')
 js = Path('sigaex/src/main/webapp/javascript/exDocumentoEdita.js')
 
