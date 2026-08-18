@@ -154,31 +154,64 @@ function obterPrimeiroCampoInvalidoDocumento() {
 }
 
 function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
+	function vazio(nomeSigla) {
+		var el = $('[name="' + nomeSigla + '"]').first();
+		if (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
+		var nomeId = nomeSigla.replace('Sel.sigla', 'Sel.id');
+		var id = $('[name="' + nomeId + '"]').first();
+		var valor = id.length ? id.val() : el.val();
+		return !String(valor || '').trim();
+	}
+
+	/* PBdoc: Assunto é sempre o primeiro obrigatório apresentado. */
 	var assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
 	if (assunto.length > 0 && campoDeveAparecerNoResumoDocumento(assunto)
 			&& !String(assunto.val() || '').trim()) {
-		return limparNomeCampoDocumento(obterNomeCampoDocumento(assunto)) || 'Assunto';
+		return 'Assunto';
 	}
+
+	var tipoDestinatario = String($('[name="exDocumentoDTO.tipoDestinatario"]').val() || '');
+	if (tipoDestinatario === '1' && vazio('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
+	if (tipoDestinatario === '2' && vazio('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
+	if (tipoDestinatario === '3' && vazio('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
+	if (tipoDestinatario && ['1','2','3'].indexOf(tipoDestinatario) === -1) {
+		var nmDest = $('[name="exDocumentoDTO.nmDestinatario"]').first();
+		if (nmDest.length && !String(nmDest.val() || '').trim()) return 'Destinatário';
+	}
+
+	if (vazio('exDocumentoDTO.classificacaoSel.sigla')) return 'Classificação Documental';
+	if (vazio('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
+	if ($('#substitutoSwitch').is(':checked') && vazio('exDocumentoDTO.titularSel.sigla')) return 'Titular';
 
 	var invalido = $('#frm').find('.is-invalid').filter(function() {
 		return campoDeveAparecerNoResumoDocumento($(this));
 	}).first();
-
 	if (invalido.length > 0) {
+		var div = obterMensagemDivErro(invalido);
+		var nomeSalvo = limparNomeCampoDocumento(div.attr('data-nome-campo-documento'));
+		if (nomeSalvo && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nomeSalvo)) return nomeSalvo;
 		var nomeReal = limparNomeCampoDocumento(obterNomeCampoDocumento(invalido));
-		if (nomeReal) return nomeReal;
+		if (nomeReal && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nomeReal)) return nomeReal;
 	}
 
 	if (mensagens && mensagens.length) {
 		var m = String(mensagens[0] || '')
-			.replace(/^Favor\s+(preencher|informar|selecionar)\s+(o\s+|a\s+)?campo\s*/i, '')
+			.replace(/^Favor\s+(preencher|informar|selecionar|selecione)\s+(o\s+|a\s+)?campo\s*/i, '')
 			.replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/[.'\"]+$/g, '')
+			.replace(/[.'"]+$/g, '')
 			.trim();
-		if (m) return m;
+		if (m && !/^(Campo obrigatório|um campo obrigatório)$/i.test(m)) return m;
 	}
 
-	return 'Campo obrigatório';
+	var obrigatorios = $('#frm').find('[name=obrigatorios]');
+	for (var i = 0; i < obrigatorios.length; i++) {
+		var el = $('[name="' + obrigatorios[i].value + '"]').first();
+		if (!el.length || !campoDeveAparecerNoResumoDocumento(el)) continue;
+		var nome = limparNomeCampoDocumento(obterNomeCampoDocumento(el));
+		if (nome && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nome)) return nome;
+	}
+
+	return 'Campo do documento';
 }
 
 function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
@@ -186,11 +219,10 @@ function exibirModalCamposObrigatoriosDocumento(mensagens, finalizar) {
 	var nomeCampo = obterCampoObrigatorioPrioritarioDocumento(mensagens);
 	var msg = "Preencha o campo '" + nomeCampo + "' antes de gravar o documento.";
 
-	/* Padrão PBdoc: obrigatório é informado somente no modal, sem pintar campos de vermelho. */
+	/* Sem borda vermelha: mantém apenas o texto/label do campo obrigatório em vermelho. */
 	$('#frm').find('.is-invalid').each(function() {
 		var campo = $(this);
 		removerElementoInvalido(campo);
-		removerLabelInvalido(campo);
 		obterMensagemDivErro(campo).text('');
 	});
 

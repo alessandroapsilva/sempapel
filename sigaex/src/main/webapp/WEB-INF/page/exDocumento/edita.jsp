@@ -458,7 +458,7 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-final-20260817-3"></script>
+	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-nomes-reais-20260817-4"></script>
 </siga:pagina>
 
 <script type="text/javascript">
