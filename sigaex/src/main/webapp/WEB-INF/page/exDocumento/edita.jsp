@@ -9,7 +9,7 @@
 <siga:pagina titulo="Novo Documento">
 	<link rel="stylesheet" href="/siga/javascript/hierarchy-select/hierarchy-select.css" type="text/css" media="screen, projection" />
 	<script type="text/javascript" src="${f:resource('/ckeditor.url')}?v=4.15.0.L0FJ.c71958523b"></script>
-	<script type="text/javascript" src="../../../javascript/exDocumentoEdita.js?v=pbdoc-final-20260817"></script>
+	<script type="text/javascript" src="../../../javascript/exDocumentoEdita.js?v=pbdoc-explicito-20260818-1"></script>
 	<script type="text/javascript" src="/siga/javascript/jquery.blockUI.js"></script>
 	<script type="text/javascript" src="/siga/javascript/hierarchy-select/hierarchy-select.js"></script>
 	<script type="text/javascript" src="/siga/javascript/crypto-js/4.1.1/crypto-js.min.js"></script>
