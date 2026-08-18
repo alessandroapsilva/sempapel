@@ -18,7 +18,7 @@ jobs:
         with:
           ref: release/11.5
           fetch-depth: 0
-      - name: Aplicar correção
+      - name: Aplicar correção final
         run: python3 .github/scripts/fix-validacao-nomes-label-red.py
       - name: Commitar
         run: |
@@ -26,5 +26,5 @@ jobs:
           git config user.email "enfas@users.noreply.github.com"
           rm -f .github/workflows/fix-validacao-nomes-label-red-once.yml .github/scripts/fix-validacao-nomes-label-red.py
           git add -A
-          git commit -m "Mostra nome real do obrigatório e deixa só label vermelho"
+          git commit -m "Corrige nomes dos campos obrigatórios no modal"
           git push origin HEAD:release/11.5
