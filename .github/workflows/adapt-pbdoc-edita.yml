@@ -1,0 +1,45 @@
+name: Adaptar edita ao PBdoc
+
+on:
+  push:
+    branches:
+      - release/11.5
+    paths:
+      - '.github/scripts/adapt-pbdoc-edita.py'
+
+permissions:
+  contents: write
+
+jobs:
+  adaptar:
+    if: "!contains(github.event.head_commit.message, '[pbdoc-adaptado]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Aplicar adaptação compatível
+        run: python3 .github/scripts/adapt-pbdoc-edita.py
+
+      - name: Validar alterações
+        run: |
+          grep -q 'exDocumentoEdita.js?v=pbdoc-adapt-20260818-2' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
+          grep -q '(obrigatório)' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
+          grep -q "return avisarCampo('Assunto'" sigaex/src/main/webapp/javascript/exDocumentoEdita.js
+          ! grep -q "nomeCampo = 'Campo obrigatório'" sigaex/src/main/webapp/javascript/exDocumentoEdita.js
+
+      - name: Commitar
+        run: |
+          if git diff --quiet; then
+            echo 'Nenhuma alteração necessária.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp sigaex/src/main/webapp/javascript/exDocumentoEdita.js
+          git commit -m 'Adapta edita ao padrão PBdoc sem trocar a versão [pbdoc-adaptado]'
+          git push origin HEAD:release/11.5
