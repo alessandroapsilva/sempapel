@@ -4,107 +4,98 @@ import re
 js = Path('sigaex/src/main/webapp/javascript/documento.validacao.js')
 s = js.read_text(encoding='utf-8')
 
-pat = re.compile(r"function obterCampoObrigatorioPrioritarioDocumento\(mensagens\) \{.*?\n\}\n\nfunction exibirModalCamposObrigatoriosDocumento", re.S)
-new = r'''function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
-	function vazio(nomeSigla) {
-		var el = $('[name="' + nomeSigla + '"]').first();
-		if (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
-		var nomeId = nomeSigla.replace('Sel.sigla', 'Sel.id');
-		var id = $('[name="' + nomeId + '"]').first();
-		var valor = id.length ? id.val() : el.val();
-		return !String(valor || '').trim();
-	}
+inicio = s.index('function obterCampoObrigatorioPrioritarioDocumento(mensagens) {')
+fim = s.index('function exibirModalCamposObrigatoriosDocumento', inicio)
 
-	// PBdoc: Assunto é sempre o primeiro obrigatório apresentado.
-	var assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
-	if (assunto.length > 0 && campoDeveAparecerNoResumoDocumento(assunto)
-			&& !String(assunto.val() || '').trim()) {
-		return 'Assunto';
-	}
+nova_funcao = '''function obterCampoObrigatorioPrioritarioDocumento(mensagens) {
+\tfunction vazio(nomeSigla) {
+\t\tvar el = $('[name="' + nomeSigla + '"]').first();
+\t\tif (el.length == 0 || !campoDeveAparecerNoResumoDocumento(el)) return false;
+\t\tvar nomeId = nomeSigla.replace('Sel.sigla', 'Sel.id');
+\t\tvar id = $('[name="' + nomeId + '"]').first();
+\t\tvar valor = id.length ? id.val() : el.val();
+\t\treturn !String(valor || '').trim();
+\t}
 
-	// Destinatário: mostra o nome do campo e a opção escolhida.
-	var tipoDestinatario = String($('[name="exDocumentoDTO.tipoDestinatario"]').val() || '');
-	if (tipoDestinatario === '1' && vazio('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
-	if (tipoDestinatario === '2' && vazio('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
-	if (tipoDestinatario === '3' && vazio('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
-	if (tipoDestinatario && ['1','2','3'].indexOf(tipoDestinatario) === -1) {
-		var nmDest = $('[name="exDocumentoDTO.nmDestinatario"]').first();
-		if (nmDest.length && !String(nmDest.val() || '').trim()) return 'Destinatário';
-	}
+\t/* PBdoc: Assunto é sempre o primeiro obrigatório apresentado. */
+\tvar assunto = $('[name="exDocumentoDTO.descrDocumento"]').first();
+\tif (assunto.length > 0 && campoDeveAparecerNoResumoDocumento(assunto)
+\t\t\t&& !String(assunto.val() || '').trim()) {
+\t\treturn 'Assunto';
+\t}
 
-	if (vazio('exDocumentoDTO.classificacaoSel.sigla')) return 'Classificação Documental';
-	if (vazio('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
-	if ($('#substitutoSwitch').is(':checked') && vazio('exDocumentoDTO.titularSel.sigla')) return 'Titular';
+\tvar tipoDestinatario = String($('[name="exDocumentoDTO.tipoDestinatario"]').val() || '');
+\tif (tipoDestinatario === '1' && vazio('exDocumentoDTO.destinatarioSel.sigla')) return 'Destinatário - Usuário';
+\tif (tipoDestinatario === '2' && vazio('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) return 'Destinatário - Lotação';
+\tif (tipoDestinatario === '3' && vazio('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) return 'Destinatário - Órgão Externo';
+\tif (tipoDestinatario && ['1','2','3'].indexOf(tipoDestinatario) === -1) {
+\t\tvar nmDest = $('[name="exDocumentoDTO.nmDestinatario"]').first();
+\t\tif (nmDest.length && !String(nmDest.val() || '').trim()) return 'Destinatário';
+\t}
 
-	var invalido = $('#frm').find('.is-invalid').filter(function() {
-		return campoDeveAparecerNoResumoDocumento($(this));
-	}).first();
+\tif (vazio('exDocumentoDTO.classificacaoSel.sigla')) return 'Classificação Documental';
+\tif (vazio('exDocumentoDTO.subscritorSel.sigla')) return 'Responsável pela Assinatura';
+\tif ($('#substitutoSwitch').is(':checked') && vazio('exDocumentoDTO.titularSel.sigla')) return 'Titular';
 
-	if (invalido.length > 0) {
-		var div = obterMensagemDivErro(invalido);
-		var nomeSalvo = limparNomeCampoDocumento(div.attr('data-nome-campo-documento'));
-		if (nomeSalvo) return nomeSalvo;
-		var nomeReal = limparNomeCampoDocumento(obterNomeCampoDocumento(invalido));
-		if (nomeReal) return nomeReal;
-	}
+\tvar invalido = $('#frm').find('.is-invalid').filter(function() {
+\t\treturn campoDeveAparecerNoResumoDocumento($(this));
+\t}).first();
+\tif (invalido.length > 0) {
+\t\tvar div = obterMensagemDivErro(invalido);
+\t\tvar nomeSalvo = limparNomeCampoDocumento(div.attr('data-nome-campo-documento'));
+\t\tif (nomeSalvo && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nomeSalvo)) return nomeSalvo;
+\t\tvar nomeReal = limparNomeCampoDocumento(obterNomeCampoDocumento(invalido));
+\t\tif (nomeReal && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nomeReal)) return nomeReal;
+\t}
 
-	if (mensagens && mensagens.length) {
-		var m = String(mensagens[0] || '')
-			.replace(/^Favor\s+(preencher|informar|selecionar|selecione)\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/^Preencha\s+(o\s+|a\s+)?campo\s*/i, '')
-			.replace(/[.'\"]+$/g, '')
-			.trim();
-		if (m && !/^um campo obrigatório$/i.test(m) && !/^campo obrigatório$/i.test(m)) return m;
-	}
+\tif (mensagens && mensagens.length) {
+\t\tvar m = String(mensagens[0] || '')
+\t\t\t.replace(/^Favor\\s+(preencher|informar|selecionar|selecione)\\s+(o\\s+|a\\s+)?campo\\s*/i, '')
+\t\t\t.replace(/^Preencha\\s+(o\\s+|a\\s+)?campo\\s*/i, '')
+\t\t\t.replace(/[.'\"]+$/g, '')
+\t\t\t.trim();
+\t\tif (m && !/^(Campo obrigatório|um campo obrigatório)$/i.test(m)) return m;
+\t}
 
-	var obrigatorios = $('#frm').find('[name=obrigatorios]');
-	for (var i = 0; i < obrigatorios.length; i++) {
-		var el = $('[name="' + obrigatorios[i].value + '"]').first();
-		if (!el.length || !campoDeveAparecerNoResumoDocumento(el)) continue;
-		var nome = limparNomeCampoDocumento(obterNomeCampoDocumento(el));
-		if (nome) return nome;
-	}
+\tvar obrigatorios = $('#frm').find('[name=obrigatorios]');
+\tfor (var i = 0; i < obrigatorios.length; i++) {
+\t\tvar el = $('[name="' + obrigatorios[i].value + '"]').first();
+\t\tif (!el.length || !campoDeveAparecerNoResumoDocumento(el)) continue;
+\t\tvar nome = limparNomeCampoDocumento(obterNomeCampoDocumento(el));
+\t\tif (nome && !/^(Campo obrigatório|um campo obrigatório)$/i.test(nome)) return nome;
+\t}
 
-	return 'Campo do documento';
+\treturn 'Campo do documento';
 }
 
-function exibirModalCamposObrigatoriosDocumento'''
-s, n = pat.subn(lambda m: new, s, count=1)
-if n != 1:
-    raise SystemExit('Não encontrou obterCampoObrigatorioPrioritarioDocumento')
+'''
 
-old = '''\t/* Padrão PBdoc: obrigatório é informado somente no modal, sem pintar campos de vermelho. */
+s = s[:inicio] + nova_funcao + s[fim:]
+
+antigo = '''\t/* Padrão PBdoc: obrigatório é informado somente no modal, sem pintar campos de vermelho. */
 \t$('#frm').find('.is-invalid').each(function() {
 \t\tvar campo = $(this);
 \t\tremoverElementoInvalido(campo);
 \t\tremoverLabelInvalido(campo);
 \t\tobterMensagemDivErro(campo).text('');
 \t});'''
-new2 = '''\t/* Obrigatório: sem borda/caixa vermelha; mantém somente o nome do campo em vermelho. */
+novo = '''\t/* Sem borda vermelha: mantém apenas o texto/label do campo obrigatório em vermelho. */
 \t$('#frm').find('.is-invalid').each(function() {
 \t\tvar campo = $(this);
 \t\tremoverElementoInvalido(campo);
 \t\tobterMensagemDivErro(campo).text('');
 \t});'''
-if old not in s:
-    raise SystemExit('Não encontrou bloco visual do modal')
-s = s.replace(old, new2, 1)
-
-pat2 = re.compile(r"function removerErro\(elemento\) \{.*?\n\}", re.S)
-new3 = '''function removerErro(elemento) {
-\tremoverElementoInvalido(elemento);
-\tremoverLabelInvalido(elemento);
-\tobterMensagemDivErro(elemento).text('');
-}'''
-s, n = pat2.subn(lambda m: new3, s, count=1)
-if n != 1:
-    raise SystemExit('Não encontrou removerErro')
+if antigo not in s:
+    raise SystemExit('Bloco visual esperado não encontrado')
+s = s.replace(antigo, novo, 1)
 
 js.write_text(s, encoding='utf-8')
 
 jsp = Path('sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp')
 t = jsp.read_text(encoding='utf-8')
-t, n = re.subn(r'documento\.validacao\.js\?v=[^"\']+', 'documento.validacao.js?v=pbdoc-validacao-20260817-3', t, count=1)
-if n != 1:
-    raise SystemExit('Não encontrou versão de documento.validacao.js no edita.jsp')
+antiga_versao = 'documento.validacao.js?v=pbdoc-final-20260817-3'
+nova_versao = 'documento.validacao.js?v=pbdoc-nomes-reais-20260817-4'
+if antiga_versao not in t:
+    raise SystemExit('Versão atual do JS não encontrada no edita.jsp')
+t = t.replace(antiga_versao, nova_versao, 1)
 jsp.write_text(t, encoding='utf-8')
