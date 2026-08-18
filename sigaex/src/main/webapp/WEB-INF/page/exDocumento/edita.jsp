@@ -7,9 +7,23 @@
 <%@ taglib uri="http://localhost/functiontag" prefix="f"%>
 
 <siga:pagina titulo="Novo Documento">
+	<style id="pbdoc-required-visual-20260818">
+		#frm .form-control.is-invalid,
+		#frm .custom-select.is-invalid,
+		#frm .custom-file-input.is-invalid ~ .custom-file-label {
+			border-color: #ced4da !important;
+			background-image: none !important;
+			box-shadow: none !important;
+		}
+		#frm .form-control.is-invalid:focus,
+		#frm .custom-select.is-invalid:focus {
+			border-color: #80bdff !important;
+			box-shadow: 0 0 0 .2rem rgba(0,123,255,.25) !important;
+		}
+	</style>
 	<link rel="stylesheet" href="/siga/javascript/hierarchy-select/hierarchy-select.css" type="text/css" media="screen, projection" />
 	<script type="text/javascript" src="${f:resource('/ckeditor.url')}?v=4.15.0.L0FJ.c71958523b"></script>
-	<script type="text/javascript" src="../../../javascript/exDocumentoEdita.js?v=pbdoc-explicito-20260818-1"></script>
+	<script type="text/javascript" src="../../../javascript/exDocumentoEdita.js?v=pbdoc-adapt-20260818-2"></script>
 	<script type="text/javascript" src="/siga/javascript/jquery.blockUI.js"></script>
 	<script type="text/javascript" src="/siga/javascript/hierarchy-select/hierarchy-select.js"></script>
 	<script type="text/javascript" src="/siga/javascript/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -155,7 +169,7 @@
 						</div>
 						<div class="col-sm-3">
 							<div class="form-group">
-								<label for="exDocumentoDTO.dtDocString">Data <span class="text-danger">*</span></label>
+								<label for="exDocumentoDTO.dtDocString">Data <a style="color: red">(obrigatório)</a></label>
 								<input type="text" name="exDocumentoDTO.dtDocString" size="10" onblur="javascript:verifica_data(this, true);" value="${exDocumentoDTO.dtDocString}" class="form-control campoData" autocomplete="off" id="dataAtual" readonly="readonly" />
 								<small class="form-text text-muted">Data preenchida automaticamente.</small>
 							</div>
@@ -194,7 +208,7 @@
 												<input type="hidden" name="campos" value="substituicao" />
 												<input type="hidden" name="campos" value="personalizacao" />
 												<input type="hidden" id="temCossignatarios" value="${not empty exDocumentoDTO.doc.cosignatarios}" />
-												<label>Responsável pela Assinatura <span class="text-danger">*</span></label>
+												<label>Responsável pela Assinatura <a style="color: red">(obrigatório)</a></label>
 												<siga:selecao propriedade="subscritor" inputName="exDocumentoDTO.subscritor" modulo="siga" tema="simple" />
 												<small class="form-text text-muted">Selecione a pessoa responsável pela assinatura do documento.</small>
 											</div>
@@ -221,7 +235,7 @@
 									</c:when>
 									<c:otherwise>
 										<div class="col-sm-12">
-											<label><fmt:message key="documento.subscritor" /> <span class="text-danger">*</span></label>
+											<label><fmt:message key="documento.subscritor" /> <a style="color: red">(obrigatório)</a></label>
 											<div class="row">
 												<div class="col-sm-4">
 													<input type="text" value="${exDocumentoDTO.subscritorSel.sigla}" class="form-control" disabled />
@@ -252,7 +266,7 @@
 						<div class="row js-siga-sp-documento-analisa-alteracao">
 							<div class="col-sm-8">
 								<div class="form-group">
-									<label>Substituto do Responsável pela Assinatura <span class="text-danger">*</span></label>
+									<label>Substituto do Responsável pela Assinatura <a style="color: red">(obrigatório)</a></label>
 									<siga:selecao propriedade="titular" inputName="exDocumentoDTO.titular" tema="simple" modulo="siga" />
 								</div>
 							</div>
@@ -276,7 +290,7 @@
 						<div class="row">
 							<div class="col-sm-2">
 								<div class="form-group">
-									<label>Destinatário <span class="text-danger">*</span></label>
+									<label>Destinatário <a style="color: red">(obrigatório)</a></label>
 									<select name="exDocumentoDTO.tipoDestinatario" onchange="javascript:sbmt();" class="form-control">
 										<c:forEach items="${exDocumentoDTO.listaTipoDest}" var="item">
 											<option value="${item.key}" ${item.key == exDocumentoDTO.tipoDestinatario ? 'selected' : ''}>${item.value}</option>
@@ -325,7 +339,7 @@
 						<div class="col col-5">
 							<div class="form-group">
 								<input type="hidden" name="campos" value="classificacaoSel.id" />
-								<label>Classificação Documental <span class="text-danger">*</span></label>
+								<label>Classificação Documental <a style="color: red">(obrigatório)</a></label>
 								<siga:span id="classificacao" depende="forma;modelo">
 									<siga:selecao modulo="sigaex" propriedade="classificacao" inputName="exDocumentoDTO.classificacao" urlAcao="buscar" urlSelecionar="selecionar" tema="simple" onchangeid="updateURL()" />
 								</siga:span>
@@ -349,7 +363,7 @@
 					<div class="row js-siga-sp-documento-analisa-alteracao" id="divAssunto">
 						<div class="col-sm-8">
 							<div class="form-group">
-								<label>Assunto <span class="text-danger">*</span></label>
+								<label>Assunto <a style="color: red">(obrigatório)</a></label>
 								<textarea name="exDocumentoDTO.descrDocumento" cols="80" rows="2" id="descrDocumento" class="form-control" oninput="updateURL()">${exDocumentoDTO.descrDocumento}</textarea>
 								<small class="form-text text-muted">(preencher com palavras-chave, substantivos, masculino, singular).</small>
 							</div>
@@ -458,7 +472,7 @@
 		</div>
 	</div>
 
-	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-nomes-reais-20260817-4"></script>
+	<script type="text/javascript" src="../../../javascript/documento.validacao.js?v=pbdoc-adapt-20260818-2"></script>
 </siga:pagina>
 
 <script type="text/javascript">

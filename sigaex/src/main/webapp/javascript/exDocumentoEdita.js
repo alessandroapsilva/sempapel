@@ -120,7 +120,8 @@ function validar(silencioso, finalizar) {
 	function valorSelecao(sigla) {
 		var id = sigla.replace('Sel.sigla', 'Sel.id');
 		var elId = document.getElementsByName(id);
-		if (elId && elId.length && String(elId[0].value || '').trim()) return String(elId[0].value || '').trim();
+		if (elId && elId.length && String(elId[0].value || '').trim())
+			return String(elId[0].value || '').trim();
 		return valor(sigla);
 	}
 
@@ -130,69 +131,75 @@ function validar(silencioso, finalizar) {
 		return false;
 	}
 
-	/* Igual ao PBdoc, porém com Assunto como PRIMEIRO obrigatório, conforme regra ENFAS. */
+	/* Regra ENFAS: Assunto é sempre o primeiro obrigatório cobrado. */
 	var descricaoAutomatica = document.getElementById('descricaoAutomatica');
 	var assunto = document.getElementsByName('exDocumentoDTO.descrDocumento');
 	if (descricaoAutomatica == null && (!assunto || !assunto.length || !String(assunto[0].value || '').trim())) {
 		return avisarCampo('Assunto', assunto && assunto.length ? assunto[0] : null);
 	}
 
-	/* Destinatário: nome exato conforme a opção exibida na tela. */
+	/* Destinatário: usa o nome real da opção escolhida, como no PBdoc. */
 	var tipoDestinatarioEl = document.getElementsByName('exDocumentoDTO.tipoDestinatario');
 	var tipoDestinatario = tipoDestinatarioEl && tipoDestinatarioEl.length ? String(tipoDestinatarioEl[0].value || '') : '';
 	if (tipoDestinatario === '1' && !valorSelecao('exDocumentoDTO.destinatarioSel.sigla')) {
-		var e1 = document.getElementsByName('exDocumentoDTO.destinatarioSel.sigla');
-		return avisarCampo('Destinatário - Usuário', e1 && e1.length ? e1[0] : null);
+		var destUsuario = document.getElementsByName('exDocumentoDTO.destinatarioSel.sigla');
+		return avisarCampo('Destinatário - Usuário', destUsuario && destUsuario.length ? destUsuario[0] : null);
 	}
 	if (tipoDestinatario === '2' && !valorSelecao('exDocumentoDTO.lotacaoDestinatarioSel.sigla')) {
-		var e2 = document.getElementsByName('exDocumentoDTO.lotacaoDestinatarioSel.sigla');
-		return avisarCampo('Destinatário - Lotação', e2 && e2.length ? e2[0] : null);
+		var destLotacao = document.getElementsByName('exDocumentoDTO.lotacaoDestinatarioSel.sigla');
+		return avisarCampo('Destinatário - Lotação', destLotacao && destLotacao.length ? destLotacao[0] : null);
 	}
 	if (tipoDestinatario === '3' && !valorSelecao('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla')) {
-		var e3 = document.getElementsByName('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla');
-		return avisarCampo('Destinatário - Órgão Externo', e3 && e3.length ? e3[0] : null);
+		var destOrgao = document.getElementsByName('exDocumentoDTO.orgaoExternoDestinatarioSel.sigla');
+		return avisarCampo('Destinatário - Órgão Externo', destOrgao && destOrgao.length ? destOrgao[0] : null);
 	}
-	if (tipoDestinatario && ['1','2','3'].indexOf(tipoDestinatario) === -1 && !valor('exDocumentoDTO.nmDestinatario')) {
-		var e4 = document.getElementsByName('exDocumentoDTO.nmDestinatario');
-		return avisarCampo('Destinatário - Campo Livre', e4 && e4.length ? e4[0] : null);
+	if (tipoDestinatario && ['1', '2', '3'].indexOf(tipoDestinatario) === -1 && !valor('exDocumentoDTO.nmDestinatario')) {
+		var destLivre = document.getElementsByName('exDocumentoDTO.nmDestinatario');
+		return avisarCampo('Destinatário - Campo Livre', destLivre && destLivre.length ? destLivre[0] : null);
 	}
 
-	/* Classificação: usa exatamente o nome da tela ENFAS. */
+	/* Usa o nome adotado na tela desta release, sem copiar JSP de outra versão. */
 	if (!valorSelecao('exDocumentoDTO.classificacaoSel.sigla')) {
-		var cl = document.getElementsByName('exDocumentoDTO.classificacaoSel.sigla');
-		return avisarCampo('Classificação Documental', cl && cl.length ? cl[0] : null);
+		var classificacao = document.getElementsByName('exDocumentoDTO.classificacaoSel.sigla');
+		return avisarCampo('Classificação Documental', classificacao && classificacao.length ? classificacao[0] : null);
 	}
 
-	/* Responsável / substituto, no estilo explícito do PBdoc. */
+	/* Responsável e substituto, de forma explícita como no PBdoc. */
 	var substituicao = document.getElementsByName('exDocumentoDTO.substituicao');
 	var substitutoAtivado = substituicao && substituicao.length && substituicao[0].checked;
 	if (substitutoAtivado) {
 		if (!valorSelecao('exDocumentoDTO.titularSel.sigla')) {
-			var tit = document.getElementsByName('exDocumentoDTO.titularSel.sigla');
-			return avisarCampo('Substituto Responsável pela Assinatura', tit && tit.length ? tit[0] : null);
+			var titular = document.getElementsByName('exDocumentoDTO.titularSel.sigla');
+			return avisarCampo('Substituto Responsável pela Assinatura', titular && titular.length ? titular[0] : null);
 		}
 	} else if (!valorSelecao('exDocumentoDTO.subscritorSel.sigla')) {
-		var sub = document.getElementsByName('exDocumentoDTO.subscritorSel.sigla');
-		return avisarCampo('Responsável pela Assinatura', sub && sub.length ? sub[0] : null);
+		var subscritorSel = document.getElementsByName('exDocumentoDTO.subscritorSel.sigla');
+		return avisarCampo('Responsável pela Assinatura', subscritorSel && subscritorSel.length ? subscritorSel[0] : null);
 	}
 
-	/* Campos obrigatórios da entrevista/modelo: mantém a validação genérica só para eles. */
-	validarCamposEntrevista();
+	/* Campos da entrevista/modelo continuam usando o mecanismo nativo desta versão. */
+	if (typeof validarCamposEntrevista === 'function') validarCamposEntrevista();
 	var camposInvalidos = $('#frm').find('.is-invalid').not('input[type="hidden"]');
 	if (camposInvalidos.length > 0) {
 		var primeiro = camposInvalidos.first();
 		var nomeCampo = '';
 		if (typeof obterNomeCampoDocumento === 'function') nomeCampo = obterNomeCampoDocumento(primeiro);
 		if (typeof limparNomeCampoDocumento === 'function') nomeCampo = limparNomeCampoDocumento(nomeCampo);
+
 		if (!nomeCampo || /^(Campo obrigatório|um campo obrigatório)$/i.test(nomeCampo)) {
-			/* Nunca exibir o texto genérico. Usa name como último fallback legível. */
-			nomeCampo = String(primeiro.attr('name') || 'Campo do modelo')
+			var name = String(primeiro.attr('name') || '').trim();
+			nomeCampo = name
 				.replace(/^exDocumentoDTO\./, '')
 				.replace(/Sel\.sigla$/, '')
 				.replace(/_/g, ' ')
 				.replace(/([A-Z])/g, ' $1')
+				.replace(/\s+/g, ' ')
 				.trim();
 		}
+
+		if (!nomeCampo || /^(Campo obrigatório|um campo obrigatório)$/i.test(nomeCampo))
+			nomeCampo = 'Campo do modelo';
+
 		return avisarCampo(nomeCampo, primeiro[0]);
 	}
 
@@ -223,12 +230,17 @@ function validar(silencioso, finalizar) {
 		}
 	}
 
-	var limite = document.getElementsByName('exDocumentoDTO.tamanhoMaximoDescricao')[0].value;
-	if (assunto && assunto.length && assunto[0].value.length >= limite) {
-		aviso('O tamanho máximo da descrição é de ' + limite + ' caracteres', silencioso);
-		return false;
+	var limiteEl = document.getElementsByName('exDocumentoDTO.tamanhoMaximoDescricao');
+	if (limiteEl && limiteEl.length && assunto && assunto.length) {
+		var limite = limiteEl[0].value;
+		if (assunto[0].value.length >= limite) {
+			aviso('O tamanho máximo da descrição é de ' + limite + ' caracteres', silencioso);
+			return false;
+		}
 	}
-	if (document.getElementById('frm_nmFuncaoSubscritor').value.length > 128) {
+
+	var personalizacao = document.getElementById('frm_nmFuncaoSubscritor');
+	if (personalizacao && personalizacao.value.length > 128) {
 		aviso('O tamanho máximo da soma dos caracteres de personalização é de 128 caracteres', silencioso);
 		return false;
 	}
