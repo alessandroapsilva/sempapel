@@ -30,6 +30,7 @@ import br.gov.jfrj.itextpdf.Documento;
 import br.gov.jfrj.itextpdf.Stamp;
 import br.gov.jfrj.siga.base.Prop;
 import br.gov.jfrj.siga.dp.DpLotacao;
+import br.gov.jfrj.siga.dp.DpPessoa;
 import br.gov.jfrj.siga.model.Objeto;
 @MappedSuperclass
 public abstract class ExArquivo extends Objeto {
@@ -149,6 +150,76 @@ public abstract class ExArquivo extends Objeto {
 	public abstract DpLotacao getLotacao();
 
 	/**
+	 * Complementa o carimbo com os dados funcionais do assinante.
+	 * Mantém o texto principal de assinatura do SIGA e acrescenta somente
+	 * identificação funcional, lotação e órgão quando disponíveis.
+	 */
+	private String getDetalhesFuncionaisAssinantes(boolean comLink) {
+		Set<ExMovimentacao> assinaturas = getAssinaturasDigitais();
+		if (assinaturas == null || assinaturas.isEmpty())
+			return "";
+
+		StringBuilder sb = new StringBuilder();
+		for (ExMovimentacao mov : assinaturas) {
+			if (mov == null)
+				continue;
+
+			DpPessoa pessoa = mov.getTitular() != null ? mov.getTitular() : mov.getCadastrante();
+			if (pessoa == null)
+				continue;
+
+			DpLotacao lotacao = pessoa.getLotacao();
+			String funcao = pessoa.getFuncaoString();
+			String identificacao = pessoa.getSigla();
+
+			StringBuilder detalhe = new StringBuilder();
+			if (identificacao != null && !identificacao.trim().isEmpty())
+				detalhe.append("Usuário: ").append(identificacao.trim());
+
+			if (funcao != null && !funcao.trim().isEmpty()) {
+				if (detalhe.length() > 0)
+					detalhe.append(" - ");
+				detalhe.append("Cargo/Função: ").append(funcao.trim());
+			}
+
+			if (lotacao != null) {
+				if (detalhe.length() > 0)
+					detalhe.append(" - ");
+				detalhe.append("Lotação: ");
+				if (lotacao.getNomeLotacao() != null && !lotacao.getNomeLotacao().trim().isEmpty())
+					detalhe.append(lotacao.getNomeLotacao().trim());
+				else
+					detalhe.append(lotacao.getSigla());
+
+				if (lotacao.getSiglaCompletaFormatada() != null && !lotacao.getSiglaCompletaFormatada().trim().isEmpty())
+					detalhe.append(" (").append(lotacao.getSiglaCompletaFormatada().trim()).append(")");
+
+				if (lotacao.getOrgaoUsuario() != null) {
+					String orgao = lotacao.getOrgaoUsuario().getDescricao();
+					if (orgao != null && !orgao.trim().isEmpty())
+						detalhe.append(" - Órgão: ").append(orgao.trim());
+				}
+			}
+
+			if (detalhe.length() > 0) {
+				if (comLink)
+					sb.append("<br/>");
+				else
+					sb.append("\n");
+				sb.append(detalhe);
+			}
+		}
+
+		if (sb.length() > 0) {
+			if (comLink)
+				sb.append("<br/>");
+			else
+				sb.append("\n");
+		}
+		return sb.toString();
+	}
+
+	/**
 	 * Retorna uma mensagem informando quem assinou o documento e o endereço
 	 * onde o usuário pode verificar a autenticidade de um documento com base em
 	 * um código gerado.
@@ -160,6 +231,7 @@ public abstract class ExArquivo extends Objeto {
 		if (isAssinadoDigitalmente()) {
 			
 			sMensagem += getAssinantesCompleto();
+			sMensagem += getDetalhesFuncionaisAssinantes(comLink);
 			sMensagem += "Documento Nº: " + getSiglaAssinatura()
 					+ " - consulta à autenticidade em ";
 			
