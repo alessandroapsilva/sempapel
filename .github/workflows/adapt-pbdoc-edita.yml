@@ -27,9 +27,9 @@ jobs:
 
       - name: Validar alterações
         run: |
-          grep -q 'exDocumentoEdita.js?v=pbdoc-adapt-20260818-2' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
-          grep -q '(obrigatório)' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
-          grep -q "return avisarCampo('Assunto'" sigaex/src/main/webapp/javascript/exDocumentoEdita.js
+          grep -q 'exDocumentoEdita.js?v=pbdoc-adapt-20260818-3' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
+          grep -q '<span class="text-danger">\*</span>' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
+          ! grep -q '(obrigatório)' sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp
           ! grep -q "nomeCampo = 'Campo obrigatório'" sigaex/src/main/webapp/javascript/exDocumentoEdita.js
 
       - name: Commitar
@@ -41,5 +41,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add sigaex/src/main/webapp/WEB-INF/page/exDocumento/edita.jsp sigaex/src/main/webapp/javascript/exDocumentoEdita.js
-          git commit -m 'Adapta edita ao padrão PBdoc sem trocar a versão [pbdoc-adaptado]'
+          git commit -m 'Aplica somente asterisco vermelho nos obrigatórios [pbdoc-adaptado]'
           git push origin HEAD:release/11.5
