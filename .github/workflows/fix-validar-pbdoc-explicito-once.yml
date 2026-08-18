@@ -1,0 +1,30 @@
+name: Corrige validação explícita PBdoc
+
+on:
+  push:
+    branches:
+      - release/11.5
+    paths:
+      - .github/workflows/fix-validar-pbdoc-explicito-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  corrigir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/11.5
+          fetch-depth: 0
+      - name: Aplicar validação PBdoc explícita
+        run: python3 .github/scripts/fix-validar-pbdoc-explicito.py
+      - name: Commitar correção
+        run: |
+          git config user.name "ENFAS Bot"
+          git config user.email "enfas@users.noreply.github.com"
+          rm -f .github/workflows/fix-validar-pbdoc-explicito-once.yml .github/scripts/fix-validar-pbdoc-explicito.py
+          git add -A
+          git commit -m "Usa validação explícita do PBdoc com Assunto primeiro"
+          git push origin HEAD:release/11.5
