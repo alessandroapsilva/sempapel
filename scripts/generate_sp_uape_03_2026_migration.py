@@ -99,6 +99,13 @@ def extract(pdf_path: Path):
                         clean(note),
                     )
 
+    # In three rows PDFium shifts the permanent-destination check mark into
+    # the observations cell. Preserve the visual meaning of the official table.
+    for code in ("001.03.01.002", "001.03.01.003", "002.02.01.001"):
+        description, current, intermediate, _, note = schedules[code]
+        if note == "✓":
+            schedules[code] = (description, current, intermediate, 2, "")
+
     return classifications, schedules
 
 
