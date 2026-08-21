@@ -6,15 +6,15 @@
 <%@ taglib uri="http://localhost/customtag" prefix="tags"%>
 
 <!-- 
-     Modelo : Contrato
+     Modelo : Termo
      Data da Criacao : 07/02/2007
      Ultima alteracao : 06/03/2007 
 -->
 <mod:modelo>
 	<mod:entrevista>
-		<mod:grupo titulo="Texto a ser inserido no corpo do contrato">
+		<mod:grupo titulo="Texto a ser inserido no corpo do termo">
 			<mod:grupo>
-				<mod:editor titulo="" var="texto_contrato" />
+				<mod:editor titulo="" var="texto_termo" />
 			</mod:grupo>
 		</mod:grupo>
 		<mod:selecao
@@ -63,7 +63,7 @@
 
 		<br>
 		<span style="font-size:${tl};">
-			${texto_contrato}
+			${texto_termo}
 		</span>
 		<p>&nbsp;</p>
 		<p>&nbsp;</p>

@@ -12,16 +12,16 @@
 <mod:modelo salvarViaAjax="N" acaoGravar="gravarBI" acaoExcluir="excluirBI" acaoCancelar="refazerBI" acaoFinalizar="finalizarBI">
 	<mod:entrevista>
 		<mod:grupo>
-			<mod:texto titulo="Nome do Diretor do Foro" var="nmDiretorForo" valor="Dr. Carlos Guilherme Francovich Lugones" largura="40"/>
+			<mod:texto titulo="Responsável pela publicação" var="nmDiretorForo" valor="Alessandro Silva" largura="60"/>
 		</mod:grupo>
 		<mod:grupo>
-			<mod:texto titulo="Nome do Diretor da SG" var="nmDiretorRH" valor="Patrícia Reis Longhi" largura="40" />
+			<mod:texto titulo="Responsável administrativo" var="nmDiretorRH" valor="Alessandro Silva" largura="60" />
 		</mod:grupo>
 		<mod:grupo>
-			<mod:texto titulo="Setores Responsáveis" var="setoresResponsaveis" valor="DIRFO: NSDF / SGP: SEPRF, SEBEN, SECAD, SELEG, SELOT, SESAU / SOF / SG" largura="90"/>
+			<mod:texto titulo="Setores responsáveis" var="setoresResponsaveis" valor="Administração / Financeiro / Recursos Humanos / Compras e Contratos" largura="90"/>
 		</mod:grupo>
 		<mod:grupo>
-			<mod:texto titulo="Geração" var="geraImpress" valor="SID/CIPE" largura="90"/>
+			<mod:texto titulo="Geração" var="geraImpress" valor="Enfermagem Alessandro Silva - SIGA-DOC" largura="90"/>
 		</mod:grupo>
 		
 		<mod:grupo titulo="Documentos a Publicar">
