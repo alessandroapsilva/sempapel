@@ -100,7 +100,7 @@ public class ExClassificacaoController
 			flt.setSigla(codigoSelecionado);
 		}
 
-		flt.setDescricao(getNome());
+		// A pesquisa vazia deve listar todas as séries de forma paginada. O valor\n\t\t// "%" também faz o filtro deixar de exigir palavra-chave ou nível.\n\t\tflt.setDescricao(Utils.empty(getNome()) ? "%" : getNome());
 		return flt;
 	}
 
