@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera modelos essenciais ENFAS e a migration de atualização V121."""
+"""Gera modelos essenciais ENFAS sem repetir campos nativos do edita.jsp."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BASE_GENERATOR = ROOT / "scripts/generate_enfas_freemarker_models.py"
 MODEL_DIR = ROOT / "siga-ex/src/main/resources/modelos/enfas"
-MIGRATION = ROOT / "siga-ex/src/main/resources/db/mysql/sigaex/V121.0__atualiza_modelos_essenciais_enfas.sql"
+MIGRATION = ROOT / "siga-ex/src/main/resources/db/mysql/sigaex/V122.0__remove_campos_duplicados_modelos_enfas.sql"
 
 spec = importlib.util.spec_from_file_location("enfas_base_models", BASE_GENERATOR)
 base = importlib.util.module_from_spec(spec)
@@ -20,12 +20,24 @@ assert spec.loader is not None
 spec.loader.exec_module(base)
 
 
+def core_interview(fields: str) -> str:
+    return f'''{fields}
+[@grupo titulo="Conteúdo do documento"]
+    [@grupo]
+        [@editor titulo="" var="conteudo"/]
+    [/@grupo]
+[/@grupo]
+[@grupo]
+    [@selecao titulo="Tamanho da letra" var="tamanhoLetra" opcoes="Normal;Pequeno;Grande"/]
+[/@grupo]'''
+
+
 def model(name: str, form: str, label: str, classification: str | None, fields: str, html: str) -> dict:
     return {
         "name": name,
         "form": form,
         "classification": classification,
-        "content": base.template(name, base.common_interview(fields), base.common_document(label, html)),
+        "content": base.template(name, core_interview(fields), base.common_document(label, html)),
     }
 
 
@@ -77,9 +89,9 @@ def quote(value: str) -> str:
 def generate() -> None:
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     sql = [
-        "-- Atualização dos modelos essenciais da Enfermagem Alessandro Silva.",
-        "-- Substitui modelos públicos legados por versões empresariais Freemarker.",
-        "-- Requer V119 e pode ser executada novamente com segurança.",
+        "-- Remove campos repetidos que já pertencem à tela edita.jsp.",
+        "-- Mantém na entrevista apenas os campos específicos de cada modelo.",
+        "-- Requer V121 e pode ser executada novamente com segurança.",
         "START TRANSACTION;",
         "",
     ]
