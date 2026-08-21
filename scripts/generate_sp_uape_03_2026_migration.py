@@ -398,7 +398,7 @@ if __name__ == "__main__":
         "",
         "-- Normaliza também uma carga anterior desta migration, preservando os IDs.",
         "UPDATE ex_classificacao SET codificacao=CONCAT(codificacao, '.000')",
-        "WHERE HIS_ATIVO=1 AND codificacao REGEXP '^00[1-7](\\\\.[0-9]{2}){2}
+        "WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026' AND codificacao REGEXP '^00[1-7](\\\\.[0-9]{2}){2}
         "JOIN tmp_sp_classificacao s ON s.codificacao = c.codificacao",
         "SET c.DESCR_CLASSIFICACAO = s.descricao, c.HIS_ATIVO = 1, c.HIS_DT_FIM = NULL;",
         "",
@@ -486,7 +486,7 @@ if __name__ == "__main__":
     main()
 ;",
         "UPDATE ex_classificacao SET codificacao=CONCAT(codificacao, '.00.000')",
-        "WHERE HIS_ATIVO=1 AND codificacao REGEXP '^00[1-7]\\\\.[0-9]{2}
+        "WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026' AND codificacao REGEXP '^00[1-7]\\\\.[0-9]{2}
         "JOIN tmp_sp_classificacao s ON s.codificacao = c.codificacao",
         "SET c.DESCR_CLASSIFICACAO = s.descricao, c.HIS_ATIVO = 1, c.HIS_DT_FIM = NULL;",
         "",
@@ -574,7 +574,7 @@ if __name__ == "__main__":
     main()
 ;",
         "UPDATE ex_classificacao SET codificacao=CONCAT(codificacao, '.00.00.000')",
-        "WHERE HIS_ATIVO=1 AND codificacao REGEXP '^00[1-7]
+        "WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026' AND codificacao REGEXP '^00[1-7]
         "JOIN tmp_sp_classificacao s ON s.codificacao = c.codificacao",
         "SET c.DESCR_CLASSIFICACAO = s.descricao, c.HIS_ATIVO = 1, c.HIS_DT_FIM = NULL;",
         "",
