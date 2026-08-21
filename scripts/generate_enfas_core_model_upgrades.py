@@ -104,18 +104,18 @@ def generate() -> None:
             f"TAMANHO_ARQ={len(payload)}, HASH_SHA256='{digest}', NOME_ARQ={quote(filename)} WHERE ID_ARQ=@id_arq;",
             "INSERT INTO corporativo.cp_arquivo_blob (ID_ARQ_BLOB, CONTEUDO_ARQ_BLOB)",
             f"VALUES (@id_arq, UNHEX('{payload.hex()}')) ON DUPLICATE KEY UPDATE CONTEUDO_ARQ_BLOB=VALUES(CONTEUDO_ARQ_BLOB);",
-            "INSERT INTO ex_modelo (NM_MOD, DESC_MOD, ID_ARQ, CONTEUDO_TP_BLOB, NM_ARQ_MOD, ID_CLASSIFICACAO, ID_FORMA_DOC, ID_NIVEL_ACESSO, HIS_ID_INI, HIS_DT_INI, HIS_ATIVO, NM_DIRETORIO)",
-            f"SELECT {quote(entry['name'])}, 'Modelo empresarial - Enfermagem Alessandro Silva', @id_arq, 'template/freemarker', NULL, {classification}, f.ID_FORMA_DOC, 1, NULL, CURRENT_TIMESTAMP, 1, 'ENFAS' FROM ex_forma_documento f",
+            "INSERT INTO ex_modelo (NM_MOD, DESC_MOD, ID_ARQ, NM_ARQ_MOD, ID_CLASSIFICACAO, ID_FORMA_DOC, ID_NIVEL_ACESSO, HIS_ID_INI, HIS_DT_INI, HIS_ATIVO, NM_DIRETORIO)",
+            f"SELECT {quote(entry['name'])}, 'Modelo empresarial - Enfermagem Alessandro Silva', @id_arq, NULL, {classification}, f.ID_FORMA_DOC, 1, NULL, CURRENT_TIMESTAMP, 1, 'ENFAS' FROM ex_forma_documento f",
             f"WHERE f.DESCR_FORMA_DOC={quote(entry['form'])} AND @id_mod IS NULL LIMIT 1;",
             "SET @novo_mod = IF(ROW_COUNT()=1, LAST_INSERT_ID(), NULL);",
             "SET @id_mod = COALESCE(@id_mod, @novo_mod);",
-            "UPDATE ex_modelo SET ID_ARQ=@id_arq, CONTEUDO_BLOB_MOD=NULL, CONTEUDO_TP_BLOB='template/freemarker', NM_ARQ_MOD=NULL, "
+            "UPDATE ex_modelo SET ID_ARQ=@id_arq, NM_ARQ_MOD=NULL, "
             f"ID_CLASSIFICACAO={classification}, ID_NIVEL_ACESSO=1, NM_DIRETORIO='ENFAS', DESC_MOD='Modelo empresarial - Enfermagem Alessandro Silva', HIS_ID_INI=COALESCE(HIS_ID_INI, @id_mod) WHERE ID_MOD=@id_mod;",
             "",
         ])
     sql.extend([
         "COMMIT;",
-        "SELECT ID_MOD, NM_MOD, CONTEUDO_TP_BLOB, ID_FORMA_DOC, ID_CLASSIFICACAO, ID_NIVEL_ACESSO, HIS_ATIVO",
+        "SELECT ID_MOD, NM_MOD, ID_ARQ, ID_FORMA_DOC, ID_CLASSIFICACAO, ID_NIVEL_ACESSO, HIS_ATIVO",
         "FROM ex_modelo WHERE HIS_ATIVO=1 AND NM_MOD IN ('Ofício','Memorando','Despacho','Informação','Parecer','Contrato','Folha Inicial','Processo Administrativo') ORDER BY NM_MOD;",
         "",
     ])
