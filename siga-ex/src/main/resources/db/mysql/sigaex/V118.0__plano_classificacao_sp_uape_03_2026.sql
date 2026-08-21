@@ -949,6 +949,10 @@ INSERT INTO tmp_sp_classificacao (codificacao, descricao) VALUES
 ('007.00.07.005', 'Planilha de controle de ligações telefônicas particulares'),
 ('007.00.07.006', 'Processo de autorização para execução de serviços de telecomunicações');
 
+-- 007.00 indica ausência de subfunção e não constitui classificação selecionável.
+DELETE FROM tmp_sp_classificacao
+WHERE codificacao='007.00' AND descricao='Não há';
+
 -- O SIGA representa níveis superiores preenchendo os níveis inferiores com zeros.
 UPDATE tmp_sp_classificacao SET codificacao=CONCAT(codificacao, '.000')
 WHERE codificacao REGEXP '^00[1-7](\\.[0-9]{2}){2}$';
@@ -964,6 +968,11 @@ UPDATE ex_classificacao SET codificacao=CONCAT(codificacao, '.00.000')
 WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026' AND codificacao REGEXP '^00[1-7]\\.[0-9]{2}$';
 UPDATE ex_classificacao SET codificacao=CONCAT(codificacao, '.00.00.000')
 WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026' AND codificacao REGEXP '^00[1-7]$';
+
+UPDATE ex_classificacao
+SET HIS_ATIVO=0, HIS_DT_FIM=CURRENT_TIMESTAMP
+WHERE HIS_ATIVO=1 AND OBS='Portaria UAPE 03/2026'
+  AND codificacao='007.00.00.000' AND DESCR_CLASSIFICACAO='Não há';
 
 UPDATE ex_classificacao c
 JOIN tmp_sp_classificacao s ON s.codificacao = c.codificacao
