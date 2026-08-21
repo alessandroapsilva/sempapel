@@ -469,6 +469,18 @@ public class ExClassificacaoController
 					MascaraUtil.getInstance().getMscTodosDoNivel(1));
 		}
 
+		// A função 007 do plano UAPE não possui subfunção (o documento oficial
+		// registra "007.00 - Não há"). Ao chegar ao nível de atividade, pula
+		// esse nível vazio e carrega diretamente as atividades 007.00.xx.000.
+		if (nivel == 2 && nivelSelecionado != null
+				&& nivelSelecionado.length > 1
+				&& nivelSelecionado[0] != null
+				&& nivelSelecionado[0].startsWith("007.")
+				&& (nivelSelecionado[1] == null || nivelSelecionado[1].equals("-1"))) {
+			return ExDao.getInstance().listarExClassificacaoPorNivel(
+					"007.00.__.000", nivelSelecionado[0]);
+		}
+
 		// se lista do nível anterior está definido, carrega lista baseando-se
 		// na anterior
 		if (nivelSelecionado != null && nivelSelecionado.length > (nivel - 1)) {
