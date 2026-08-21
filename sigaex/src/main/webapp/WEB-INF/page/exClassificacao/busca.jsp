@@ -27,27 +27,13 @@
 			this.value = '-1';
 		});
 
-		$('#containerResult').remove();
-		$('#alertNaoEncontrado').remove();
-		$('#nome').focus();		
+		sbmt(0);
 	}
 
 	function valida() {
-		let nivelSelecionado = false;
-		$(".nivelSelecionado").each(function() {
-		   if (this.value !== '-1') {
-			   nivelSelecionado = true;
-		   }
-		});
-		
-		if (nivelSelecionado || $('#nome').val() !== "" ) {
-			return true;
-		} else {
-			return false;
-		}
+		return true;
 	}
-	
-	function alterarNivel(nivelAlterado){
+		function alterarNivel(nivelAlterado){
 		document.getElementById("nivelAlterado").value = nivelAlterado;
 	}
 
@@ -131,7 +117,7 @@
 							<div class="form-group">
 								<label>Palavra-chave</label> 
 								<input class="form-control" type="text" name="nome" id="nome" size="50" value="${nome}"/>
-								<small class="text-muted">Obrigatório caso níveis abaixo não sejam filtrados</small>
+								<small class="text-muted">Opcional: pesquise pelo código ou por parte da descrição</small>
 							</div>
 						</div>
 					</div>
