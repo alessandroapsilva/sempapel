@@ -106,6 +106,10 @@ def extract(pdf_path: Path):
         if note == "✓":
             schedules[code] = (description, current, intermediate, 2, "")
 
+    # "007.00 - Não há" é apenas uma indicação de ausência de subfunção.
+    # Mantê-la como classificação colidiria com a função 007 após o padding.
+    classifications.pop("007.00", None)
+
     return classifications, schedules
 
 
