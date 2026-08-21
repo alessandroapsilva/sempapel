@@ -493,7 +493,10 @@ public class ExMobil extends AbstractExMobil implements Serializable, Selecionav
 				getExDocumento().setNumExpediente(Long.parseLong(numero));
 			if (sonumero != null) {
 				getExDocumento().setNumExpediente(Long.parseLong(sonumero));
-				getExDocumento().setAnoEmissao((long) new Date().getYear() + 1900);
+				if (sonumero.length() >= 6)
+					getExDocumento().setAnoEmissao(null);
+				else
+					getExDocumento().setAnoEmissao((long) new Date().getYear() + 1900);
 
 			}
 

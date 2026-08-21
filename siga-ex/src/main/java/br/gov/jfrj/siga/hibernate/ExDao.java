@@ -193,6 +193,18 @@ public class ExDao extends CpDao {
 
 		return (Long) query.getSingleResult();
 	}
+
+	public boolean existeNumeroExpediente(Long idOrgaoUsuIni, Long idFormaDoc,
+			Long numExpediente) {
+		Query query = em().createQuery("select count(doc.idDoc) from ExDocumento doc "
+				+ "where doc.orgaoUsuario.idOrgaoUsuIni = :idOrgaoUsuIni "
+				+ "and doc.exFormaDocumento.idFormaDoc = :idFormaDoc "
+				+ "and doc.numExpediente = :numExpediente");
+		query.setParameter("idOrgaoUsuIni", idOrgaoUsuIni);
+		query.setParameter("idFormaDoc", idFormaDoc);
+		query.setParameter("numExpediente", numExpediente);
+		return ((Long) query.getSingleResult()) > 0;
+	}
 	
 	
 	/*****************************/

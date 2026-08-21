@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,6 @@ import br.gov.jfrj.siga.ex.ExClassificacao;
 import br.gov.jfrj.siga.ex.ExConfiguracao;
 import br.gov.jfrj.siga.ex.ExConfiguracaoCache;
 import br.gov.jfrj.siga.ex.ExDocumento;
-import br.gov.jfrj.siga.ex.ExDocumentoNumeracao;
 import br.gov.jfrj.siga.ex.ExFormaDocumento;
 import br.gov.jfrj.siga.ex.ExMobil;
 import br.gov.jfrj.siga.ex.ExModelo;
@@ -67,7 +67,6 @@ import br.gov.jfrj.siga.ex.bl.ExBL;
 import br.gov.jfrj.siga.ex.bl.ExConfiguracaoBL;
 import br.gov.jfrj.siga.ex.logic.ExPodeMovimentar;
 import br.gov.jfrj.siga.ex.logic.ExPodePublicarPortalDaTransparencia;
-import br.gov.jfrj.siga.ex.logic.ExPodeReiniciarNumeracao;
 import br.gov.jfrj.siga.ex.logic.ExPodeSerTransferido;
 import br.gov.jfrj.siga.ex.logic.ExPodeTransferir;
 import br.gov.jfrj.siga.ex.model.enm.ExTipoDeConfiguracao;
@@ -86,6 +85,10 @@ import br.gov.jfrj.siga.vraptor.ExMobilSelecao;
 
 @WebService(serviceName = "ExService", endpointInterface = "br.gov.jfrj.siga.ex.service.ExService", targetNamespace = "http://impl.service.ex.siga.jfrj.gov.br/")
 public class ExServiceImpl implements ExService {
+	private static final SecureRandom NUMERACAO_ALEATORIA = new SecureRandom();
+	private static final int PRIMEIRO_NUMERO_ALEATORIO = 100000;
+	private static final int QUANTIDADE_NUMEROS_ALEATORIOS = 900000;
+	private static final int MAX_TENTATIVAS_NUMERACAO_ALEATORIA = 1000;
 	private final static Logger log = Logger.getLogger(ExService.class);
 
 	private class ExSoapContext extends SoapContext {
@@ -960,72 +963,18 @@ public class ExServiceImpl implements ExService {
 		}
 	}
 
-	public String obterNumeracaoExpediente(Long idOrgaoUsu, Long idFormaDoc, Long anoEmissao) throws Exception {
+	public synchronized String obterNumeracaoExpediente(Long idOrgaoUsu, Long idFormaDoc, Long anoEmissao) throws Exception {
 		try (ExSoapContext ctx = new ExSoapContext(true)) {
 			try {
-				Long idDocNumeracao = null;
-				Long nrDocumento = 0L;
-				ContextoPersistencia.flushTransaction();
-
-				// Verifica se Range atual existe
-				ExDocumentoNumeracao docNumeracao = dao().obterNumeroDocumento(idOrgaoUsu, idFormaDoc, anoEmissao,
-						false);
-
-				if (docNumeracao == null) {
-					CpOrgaoUsuario orgaoUsuario = new CpOrgaoUsuario();
-					ExFormaDocumento formaDocumento = new ExFormaDocumento();
-					orgaoUsuario.setIdOrgaoUsu(idOrgaoUsu);
-					formaDocumento.setIdFormaDoc(idFormaDoc);
-
-					orgaoUsuario = dao().consultarPorId(orgaoUsuario);
-					formaDocumento = dao().consultarExFormaPorId(idFormaDoc);
-
-					idDocNumeracao = dao().existeRangeNumeroDocumento(idOrgaoUsu, idFormaDoc);
-
-					if ((idDocNumeracao != null)
-							&& !new ExPodeReiniciarNumeracao(orgaoUsuario, formaDocumento).eval()) { // Existe
-																													// Range
-																													// Anterior
-																													// e
-																													// Não
-																													// pode
-																													// Resetar
-																													// numeracao
-						dao().updateMantemRangeNumeroDocumento(idDocNumeracao);
-
-					} else { // Não existe ou deve resetar numeração
-						ExDocumentoNumeracao documentoNumeracao = new ExDocumentoNumeracao();
-
-						documentoNumeracao.setIdOrgaoUsu(idOrgaoUsu);
-						documentoNumeracao.setIdFormaDoc(idFormaDoc);
-						documentoNumeracao.setFlAtivo("1");
-						documentoNumeracao.setAnoEmissao(anoEmissao);
-
-						nrDocumento = 1L;
-						documentoNumeracao.setNrDocumento(nrDocumento);
-						documentoNumeracao.setNrInicial(nrDocumento);
-
-						dao().gravar(documentoNumeracao);
-
-						documentoNumeracao = null;
-					}
-
-					orgaoUsuario = null;
-					formaDocumento = null;
-
-				} else { // Range vigente. Só incrementa
-					idDocNumeracao = docNumeracao.getIdDocumentoNumeracao();
-					dao().incrementNumeroDocumento(idDocNumeracao);
+				for (int tentativa = 0; tentativa < MAX_TENTATIVAS_NUMERACAO_ALEATORIA; tentativa++) {
+					long numero = PRIMEIRO_NUMERO_ALEATORIO
+							+ NUMERACAO_ALEATORIA.nextInt(QUANTIDADE_NUMEROS_ALEATORIOS);
+					if (!dao().existeNumeroExpediente(idOrgaoUsu, idFormaDoc, numero))
+						return Long.toString(numero);
 				}
 
-				if (nrDocumento != 1L) { // Obtém Número Gerado antes de liberar registro
-					nrDocumento = dao().obterNumeroGerado(idOrgaoUsu, idFormaDoc, anoEmissao);
-				}
-
-				ContextoPersistencia.flushTransaction();
-
-				// Retorno em String para WS
-				return nrDocumento.toString();
+				throw new AplicacaoException(
+						"Não foi possível gerar uma numeração aleatória única para o documento.");
 			} catch (Exception ex) {
 				ctx.rollback(ex);
 				throw new Exception(

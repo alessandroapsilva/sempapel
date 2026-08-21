@@ -253,12 +253,15 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 		}
 		if (getAnoEmissao() != null && getNumExpediente() != null) {
 			String s = getNumExpediente().toString();
-			while (s.length() < 5)
+			while (s.length() < (usarCodigoAleatorioSemAno(getNumExpediente()) ? 6 : 5))
 				s = "0" + s;
 
 			if (getOrgaoUsuario() != null) {
 				try {
-					if (getAnoEmissao() >= Prop.getInt("codigo.acronimo.ano.inicial")) {
+					if (usarCodigoAleatorioSemAno(getNumExpediente())) {
+						return getOrgaoUsuario().getAcronimoOrgaoUsu() + "-"
+								+ getExFormaDocumento().getSiglaFormaDoc() + "-" + s;
+					} else if (getAnoEmissao() >= Prop.getInt("codigo.acronimo.ano.inicial")) {
 						return getOrgaoUsuario().getAcronimoOrgaoUsu() + "-"
 								+ getExFormaDocumento().getSiglaFormaDoc()
 								+ "-" + getAnoEmissao() + "/" + s;
@@ -353,13 +356,15 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 		}
 		if (anoEmissao != null && numExpediente != null) {
 			String s = numExpediente.toString();
-			while (s.length() < 5)
+			while (s.length() < (usarCodigoAleatorioSemAno(numExpediente) ? 6 : 5))
 				s = "0" + s;
 
 			if (siglaOrgaoUsu != null) {
 				try {
 					Long l_anoEmissao = Long.valueOf(anoEmissao);
-					if (l_anoEmissao >= Prop.getInt("codigo.acronimo.ano.inicial")) {
+					if (usarCodigoAleatorioSemAno(numExpediente)) {
+						return acronimoOrgaoUsu + "-" + siglaFormaDoc + "-" + s;
+					} else if (l_anoEmissao >= Prop.getInt("codigo.acronimo.ano.inicial")) {
 						return acronimoOrgaoUsu + "-" + siglaFormaDoc + "-"
 								+ anoEmissao + "/" + s;
 					} else {
@@ -377,6 +382,10 @@ public class ExDocumento extends AbstractExDocumento implements Serializable,
 			return "NOVO";
 
 		return "TMP-" + idDoc;
+	}
+
+	private static boolean usarCodigoAleatorioSemAno(Long numExpediente) {
+		return numExpediente != null && numExpediente >= 100000L;
 	}
 
 	/**
