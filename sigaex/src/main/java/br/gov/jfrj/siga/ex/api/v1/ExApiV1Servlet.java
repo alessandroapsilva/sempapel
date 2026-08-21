@@ -192,11 +192,11 @@ public class ExApiV1Servlet extends SigaSwaggerServlet implements IPropertyProvi
 		addRestrictedProperty("bie.lista.destinatario.publicacao", null);
 		addPublicProperty("carimbo.texto.superior", "SIGA-DOC");
 		addPublicProperty("classificacao.mascara.entrada",
-				"([0-9]{0,2})\\.?([0-9]{0,2})?\\.?([0-9]{0,2})?\\.?([0-9]{0,2})?([A-Z])?");
+				"([0-9]{0,3})\\.?([0-9]{0,2})?\\.?([0-9]{0,2})?\\.?([0-9]{0,3})?");
 		addPublicProperty("classificacao.mascara.exibicao", null);
-		addPublicProperty("classificacao.mascara.javascript", "99.99.99.99");
-		addPublicProperty("classificacao.mascara.nome.nivel", "NULL,Assunto,Classe,Subclasse,Atividade");
-		addPublicProperty("classificacao.mascara.saida", "%1$02d.%2$02d.%3$02d.%4$02d");
+		addPublicProperty("classificacao.mascara.javascript", "999.99.99.999");
+		addPublicProperty("classificacao.mascara.nome.nivel", "NULL,Função,Subfunção,Atividade,Série documental");
+		addPublicProperty("classificacao.mascara.saida", "%1$03d.%2$02d.%3$02d.%4$03d");
 		addPublicProperty("classificacao.nivel.minimo.de.enquadramento", null);
 		addPublicProperty("codigo.acronimo.ano.inicial", "9999");
 		addPublicProperty("conversor.html.ext", "br.gov.jfrj.itextpdf.FlyingSaucer");
