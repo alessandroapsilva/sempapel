@@ -39,10 +39,10 @@ Na VPS:
 ```bash
 cd /home/enfas/siga_source
 git fetch origin
-git checkout feat/classificacoes-sp-uape-2026
+git checkout release/11.5-enfas
 git pull --ff-only
 chmod +x scripts/deploy-sigaex-production.sh
-sudo ./scripts/deploy-sigaex-production.sh feat/classificacoes-sp-uape-2026
+sudo ./scripts/deploy-sigaex-production.sh release/11.5-enfas
 ```
 
 O instalador:
@@ -61,7 +61,7 @@ Para outra URL de produção:
 
 ```bash
 sudo ENFAS_HEALTH_URL="https://sempapel.enfas.com.br/sigaex/" \
-  ./scripts/deploy-sigaex-production.sh feat/classificacoes-sp-uape-2026
+  ./scripts/deploy-sigaex-production.sh release/11.5-enfas
 ```
 
 ## Checklist obrigatório antes da liberação
