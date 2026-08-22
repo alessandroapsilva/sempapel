@@ -7,7 +7,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 REPO_URL="https://github.com/alessandroapsilva/sempapel.git"
-REF="${1:-feat/classificacoes-sp-uape-2026}"
+REF="${1:-release/11.5-enfas}"
 BASE="/home/enfas"
 JBOSS_HOME="$BASE/jboss-eap-7.2"
 DEPLOY="$JBOSS_HOME/standalone/deployments"
