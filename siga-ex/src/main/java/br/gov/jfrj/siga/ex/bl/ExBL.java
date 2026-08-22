@@ -3427,13 +3427,14 @@ public class ExBL extends CpBL {
 			 * Desabilita se configuracao ativa numeração realizada pelo Select Max. Numeração
 			 * controlada pela table EX_DOCUMENTO_NUMERACAO
 			 */
-			if (Prop.getBool("controlar.numeracao.expediente") || SigaMessages.isSigaSP()) {
-				doc.setAnoEmissao((long) c.get(Calendar.YEAR));
-				doc.setNumExpediente(obterNumeroDocumento(doc));
-			} else {
-				if (doc.getNumExpediente() == null)
-					doc.setNumExpediente(obterProximoNumero(doc));
-			}
+			/*
+			 * A ENFAS utiliza uma numeração aleatória única de seis dígitos para
+			 * todos os novos documentos, independentemente da configuração legada
+			 * controlar.numeracao.expediente. O ano continua armazenado internamente
+			 * para auditoria, mas não integra a sigla pública dos novos documentos.
+			 */
+			doc.setAnoEmissao((long) c.get(Calendar.YEAR));
+			doc.setNumExpediente(obterNumeroDocumento(doc));
 			
 			//Esse metodo deve estar acima do doc.setDtFinalizacao(dt), devido a flag de doc.isFinalizado()
 			gerarTipoSequenciaGenerica(doc);
