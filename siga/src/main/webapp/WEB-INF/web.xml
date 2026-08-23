@@ -24,14 +24,6 @@
 	</context-param>
 
 	<jsp-config>
-		<taglib>
-			<taglib-uri>http://localhost/customtag</taglib-uri>
-			<taglib-location>/WEB-INF/tags/tags.tld</taglib-location>
-		</taglib>
-		<taglib>
-			<taglib-uri>http://localhost/functiontag</taglib-uri>
-			<taglib-location>/WEB-INF/tags/func.tld</taglib-location>
-		</taglib>
 		<jsp-property-group>
 			<description>Property group for common configuration for all the
 				JSP's
