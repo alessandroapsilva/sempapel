@@ -1,9 +1,10 @@
-# Produção ENFAS Sem Papel — SIGA-DOC 11.5
+# Produção CEM — SIGA-DOC v11.5.cem
 
-Este documento define o procedimento de promoção da ENFAS para produção com rastreabilidade, backup e rollback.
+Este documento define o procedimento de promoção da distribuição CEM para produção com rastreabilidade, backup e rollback.
 
-## Estado consolidado da branch `release/11.5-enfas`
+## Estado consolidado da branch `release/11.5.cem`
 
+- Versão institucional identificada como `v11.5.cem`.
 - Plano de classificação documental administrativo carregado pela V118.
 - Catálogo administrativo carregado pela V119.
 - Modelos administrativos anteriores preservados pelas V120/V121/V122.
@@ -11,8 +12,22 @@ Este documento define o procedimento de promoção da ENFAS para produção com 
 - Os JSPs institucionais não duplicam Assunto, classificação, acesso, responsável ou destinatário do `edita.jsp`.
 - Numeração pública aleatória de seis dígitos, sem ano na sigla; ano de emissão mantido internamente para auditoria.
 - Compatibilidade de leitura com documentos antigos no formato com ano.
-- Build com commit Git verdadeiro, backup integral do MySQL e rollback automático do WAR.
+- Build com commit Git verdadeiro, versão no manifesto do WAR, backup integral do MySQL e rollback automático.
+- O deploy aceita como estado anterior tanto `sigaex.war` empacotado quanto `sigaex.war/` explodido.
 - Resíduos temporários e workflows que alteravam JSP automaticamente removidos.
+
+## Versionamento
+
+A coordenada Maven base continua em `11.5-SNAPSHOT` para preservar compatibilidade entre os módulos legados. A distribuição CEM define `patch.version=cem` em `.mvn/maven.config`, fazendo o identificador humano do build ser `v11.5.cem`.
+
+O manifesto do WAR deve conter:
+
+```text
+Patch-Version: cem
+Build-Label: v11.5.cem-<commit-curto>
+```
+
+Consulte `docs/RELEASES-CEM.md` para a política de branches e hotfixes.
 
 ## Numeração
 
@@ -26,21 +41,21 @@ Documentos antigos mantêm a sigla original. Nunca renumerar documentos já fina
 
 ## Implantação na VPS
 
-Use a URL real de produção explicitamente; o script não aceita mais a URL de treinamento por padrão.
+Use a URL real de produção explicitamente; o script não aceita URL implícita de treinamento.
 
 ```bash
 cd /home/enfas/siga_source
 git fetch origin
-git checkout release/11.5-enfas
+git checkout release/11.5.cem
 git pull --ff-only
 chmod +x scripts/deploy-sigaex-production.sh
 sudo ENFAS_HEALTH_URL="https://sempapel.enfas.com.br/sigaex/" \
-  ./scripts/deploy-sigaex-production.sh release/11.5-enfas
+  ./scripts/deploy-sigaex-production.sh release/11.5.cem
 ```
 
 Se o domínio definitivo for outro, substitua somente `ENFAS_HEALTH_URL`.
 
-O instalador valida dependências e espaço, faz backup de todos os bancos MySQL, cria clone limpo, confirma os oito JSPs e a V123, compila o SIGA-DOC, salva o WAR atual, implanta no JBoss, verifica o marcador `.deployed`, testa HTTP e restaura o WAR anterior automaticamente se a implantação falhar.
+O instalador valida a versão CEM, dependências e espaço; faz backup de todos os bancos MySQL; cria clone limpo; confirma os oito JSPs e a V123; compila o SIGA-DOC; valida `Patch-Version` e `Build-Label` no manifesto do WAR; salva o deployment anterior mesmo que esteja explodido; implanta um WAR limpo no JBoss; verifica o marcador `.deployed`; testa HTTP; e restaura automaticamente o deployment anterior se a implantação falhar.
 
 ## Checklist obrigatório antes de liberar usuários
 
@@ -86,6 +101,6 @@ Criar um documento de cada modelo: Ofício, Memorando, Despacho, Informação, P
 
 ## Critérios de aprovação
 
-A promoção só está aprovada quando o build termina com `BUILD SUCCESS`, o JBoss cria `sigaex.war.deployed`, a URL de produção responde sem erro, os oito modelos abrem sem erro JSP, um documento novo recebe número aleatório, assinatura e PDF funcionam, o backup passa em `gzip -t` e não aparecem erros graves novos no `server.log`.
+A promoção só está aprovada quando o build termina com `BUILD SUCCESS`, o manifesto identifica `v11.5.cem`, o JBoss cria `sigaex.war.deployed`, a URL de produção responde sem erro, os oito modelos abrem sem erro JSP, um documento novo recebe número aleatório, assinatura e PDF funcionam, o backup passa em `gzip -t` e não aparecem erros graves novos no `server.log`.
 
 Código pronto não substitui a validação operacional da VPS. Credenciais, DNS/TLS, SMTP, LDAP, backup externo e monitoramento precisam ser confirmados no ambiente real antes da entrada de usuários.
