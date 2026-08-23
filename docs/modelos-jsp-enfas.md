@@ -1,47 +1,30 @@
-# Curadoria dos modelos JSP para a ENFAS
+# Modelos JSP institucionais ENFAS
 
-## Resultado do inventário
+## Decisão de arquitetura
 
-A pasta legada contém 401 modelos JSP. O acervo foi criado principalmente para
-órgãos do Judiciário e não deve ser ativado integralmente em uma empresa
-privada. A varredura encontrou:
+O núcleo documental da ENFAS usa JSP versionado no WAR. Os modelos legados do SIGA permanecem no repositório apenas como referência e não são sobrescritos.
 
-- 92 arquivos com referência à Justiça Federal;
-- 60 arquivos com referência a Tribunal Regional;
-- 57 arquivos com referência a Juiz Federal;
-- 40 arquivos com siglas de TRFs;
-- 34 arquivos com referência ao Conselho da Justiça;
-- 257 arquivos ainda declarados como ISO-8859-1;
-- 400 arquivos com scriptlets ou diretivas JSP legadas.
+A migration `V123.0__ativa_modelos_jsp_institucionais_enfas.sql` aponta os modelos ativos para os JSPs institucionais e remove apenas a referência ativa ao `ID_ARQ` Freemarker. Os arquivos Freemarker anteriores continuam preservados no banco para rastreabilidade e rollback.
 
-## Núcleo empresarial mantido
+## Núcleo ativo
 
-Os modelos essenciais foram recriados em Freemarker e instalados pela migration
-V121, preservando o motor JSP apenas onde a lógica dinâmica do SIGA exige:
+- Ofício → `enfasOficio.jsp`
+- Memorando → `enfasMemorando.jsp`
+- Despacho → `enfasDespacho.jsp`
+- Informação → `enfasInformacao.jsp`
+- Parecer → `enfasParecer.jsp`
+- Contrato → `enfasContrato.jsp`
+- Folha Inicial → `enfasFolhaInicial.jsp`
+- Processo Administrativo → `enfasProcessoAdministrativo.jsp`
 
-- Ofício;
-- Memorando;
-- Despacho;
-- Informação;
-- Parecer;
-- Contrato;
-- Folha Inicial;
-- Processo Administrativo;
-- Boletim Interno (JSP dinâmico).
+## Regras aplicadas
 
-Ata Geral e Termo Geral tiveram erros históricos de cópia corrigidos. O Boletim
-Interno deixou de trazer nomes de servidores e setores judiciais fixos.
+Os JSPs não recriam os campos estruturais já existentes em `edita.jsp`. Assunto, classificação documental, nível de acesso, responsável pela assinatura e destinatário continuam sendo controlados pelo fluxo nativo do SIGA. O modelo usa esses dados somente para compor a apresentação final quando aplicável.
 
-## Critério para os demais JSPs
+O texto livre permanece no editor do próprio modelo. Todos os novos JSPs usam UTF-8, HTML simples compatível com o gerador de PDF do SIGA e o include nativo de assinatura.
 
-Modelos de atos judiciais, alvarás, corregedoria, magistratura, TRFs, Conselho da
-Justiça e benefícios de servidores públicos permanecem no código apenas como
-legado e não devem ser cadastrados para uso da ENFAS. Modelos administrativos
-que venham a ser necessários devem ser convertidos individualmente, com espécie,
-classificação, temporalidade e campos revisados antes da ativação.
+## Compatibilidade e rollback
 
-## Implantação
+Os JSPs antigos (`oficio.jsp`, `memorando.jsp`, `despacho.jsp` e demais modelos históricos) não foram alterados. Para rollback de modelo, basta restaurar o banco anterior ao deploy ou reatribuir o `ID_ARQ` preservado pelo backup/migration anterior.
 
-`V121.0__atualiza_modelos_essenciais_enfas.sql` cria uma nova versão de arquivo
-para não sobrescrever o conteúdo legado, atualiza o modelo ativo e é idempotente
-por hash. A migration V119 deve ter sido aplicada antes dela.
+Antes da liberação, validar criação, gravação, finalização, assinatura e geração de PDF para os oito modelos.

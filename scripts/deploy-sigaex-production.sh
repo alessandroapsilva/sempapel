@@ -16,7 +16,13 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 BUILD="$BASE/builds/sigaex-producao-$STAMP"
 BACKUP="$BASE/backups/producao-$STAMP"
 WAR="$DEPLOY/sigaex.war"
-HEALTH_URL="${ENFAS_HEALTH_URL:-https://treinamento.enfassempapel.enfas.com.br/sigaex/}"
+HEALTH_URL="${ENFAS_HEALTH_URL:-}"
+
+if [ -z "$HEALTH_URL" ]; then
+  echo "ERRO: defina ENFAS_HEALTH_URL com a URL real de produção."
+  echo "Ex.: sudo ENFAS_HEALTH_URL=https://sempapel.enfas.com.br/sigaex/ $0 $REF"
+  exit 1
+fi
 
 mkdir -p "$BASE/builds" "$BACKUP"
 
@@ -24,6 +30,7 @@ command -v git >/dev/null
 command -v mvn >/dev/null
 command -v mysqldump >/dev/null
 command -v gzip >/dev/null
+command -v curl >/dev/null
 systemctl cat "$SERVICE" >/dev/null
 test -d "$DEPLOY"
 test -f "$WAR"
@@ -35,46 +42,30 @@ if [ "$AVAILABLE_KB" -lt 5242880 ]; then
 fi
 
 echo "1/8 - Backup completo do MySQL"
-mysqldump \
-  -u root -p \
-  --all-databases \
-  --single-transaction \
-  --quick \
-  --routines \
-  --triggers \
-  --events \
-  --hex-blob \
-  --no-tablespaces \
-  --add-drop-database \
-  --default-character-set=utf8mb4 \
-  | gzip -9 > "$BACKUP/mysql-todos-os-bancos.sql.gz"
-
+mysqldump -u root -p --all-databases --single-transaction --quick --routines --triggers --events --hex-blob --no-tablespaces --add-drop-database --default-character-set=utf8mb4 | gzip -9 > "$BACKUP/mysql-todos-os-bancos.sql.gz"
 gzip -t "$BACKUP/mysql-todos-os-bancos.sql.gz"
-sha256sum "$BACKUP/mysql-todos-os-bancos.sql.gz" \
-  > "$BACKUP/mysql-todos-os-bancos.sql.gz.sha256"
+sha256sum "$BACKUP/mysql-todos-os-bancos.sql.gz" > "$BACKUP/mysql-todos-os-bancos.sql.gz.sha256"
 
 echo "2/8 - Clone limpo"
 git clone --branch "$REF" --single-branch "$REPO_URL" "$BUILD"
 cd "$BUILD"
 COMMIT="$(git rev-parse HEAD)"
-git status --porcelain | grep -q . && {
-  echo "ERRO: clone iniciou com alterações locais"
-  exit 1
-}
+git status --porcelain | grep -q . && { echo "ERRO: clone iniciou com alterações locais"; exit 1; }
 git show -s --format='Commit: %H%nDescrição: %s'
 
 echo "3/8 - Validações de produção"
 test ! -e "$BUILD/q"
 test ! -e "$BUILD/.github/workflows/adapt-pbdoc-edita.yml"
 test ! -e "$BUILD/.github/workflows/remove-anexar-final.yml"
-grep -q 'A ENFAS utiliza uma numeração aleatória' \
-  siga-ex/src/main/java/br/gov/jfrj/siga/ex/bl/ExBL.java
-grep -q 'SecureRandom' \
-  sigaex/src/main/java/br/gov/jfrj/siga/ex/service/impl/ExServiceImpl.java
+grep -q 'A ENFAS utiliza uma numeração aleatória' siga-ex/src/main/java/br/gov/jfrj/siga/ex/bl/ExBL.java
+grep -q 'SecureRandom' sigaex/src/main/java/br/gov/jfrj/siga/ex/service/impl/ExServiceImpl.java
+for jsp in enfasOficio.jsp enfasMemorando.jsp enfasDespacho.jsp enfasInformacao.jsp enfasParecer.jsp enfasContrato.jsp enfasFolhaInicial.jsp enfasProcessoAdministrativo.jsp; do
+  test -s "sigaex/src/main/webapp/paginas/expediente/modelos/$jsp"
+done
+test -s siga-ex/src/main/resources/db/mysql/sigaex/V123.0__ativa_modelos_jsp_institucionais_enfas.sql
 
 echo "4/8 - Build limpo"
 mvn -pl sigaex -am -DskipTests clean package
-
 NEW_WAR="$BUILD/sigaex/target/sigaex.war"
 test -s "$NEW_WAR"
 
@@ -89,10 +80,7 @@ rollback() {
   systemctl stop "$SERVICE" || true
   install -o enfas -g enfas -m 0644 "$BACKUP/sigaex.war.antes" "$WAR"
   for marker in deployed failed undeployed dodeploy; do
-    if [ -e "$DEPLOY/sigaex.war.$marker" ]; then
-      mv "$DEPLOY/sigaex.war.$marker" \
-        "$BACKUP/rollback-sigaex.war.$marker-$(date +%s)"
-    fi
+    if [ -e "$DEPLOY/sigaex.war.$marker" ]; then mv "$DEPLOY/sigaex.war.$marker" "$BACKUP/rollback-sigaex.war.$marker-$(date +%s)"; fi
   done
   touch "$DEPLOY/sigaex.war.dodeploy"
   chown enfas:enfas "$DEPLOY/sigaex.war.dodeploy"
@@ -101,23 +89,15 @@ rollback() {
 
 echo "6/8 - Instalação controlada"
 systemctl stop "$SERVICE"
-
 for marker in deployed failed undeployed dodeploy; do
-  if [ -e "$DEPLOY/sigaex.war.$marker" ]; then
-    mv "$DEPLOY/sigaex.war.$marker" "$BACKUP/sigaex.war.$marker"
-  fi
+  if [ -e "$DEPLOY/sigaex.war.$marker" ]; then mv "$DEPLOY/sigaex.war.$marker" "$BACKUP/sigaex.war.$marker"; fi
 done
-
 install -o enfas -g enfas -m 0644 "$NEW_WAR" "$WAR"
 touch "$DEPLOY/sigaex.war.dodeploy"
 chown enfas:enfas "$DEPLOY/sigaex.war.dodeploy"
 
 echo "7/8 - Inicialização e confirmação"
-if ! systemctl start "$SERVICE"; then
-  rollback
-  exit 1
-fi
-
+if ! systemctl start "$SERVICE"; then rollback; exit 1; fi
 DEPLOYED=0
 for _ in $(seq 1 72); do
   if [ -f "$DEPLOY/sigaex.war.failed" ]; then
@@ -126,22 +106,13 @@ for _ in $(seq 1 72); do
     rollback
     exit 1
   fi
-  if [ -f "$DEPLOY/sigaex.war.deployed" ]; then
-    DEPLOYED=1
-    break
-  fi
+  if [ -f "$DEPLOY/sigaex.war.deployed" ]; then DEPLOYED=1; break; fi
   sleep 5
 done
-
-if [ "$DEPLOYED" -ne 1 ]; then
-  tail -n 200 "$JBOSS_HOME/standalone/log/server.log"
-  rollback
-  exit 1
-fi
+if [ "$DEPLOYED" -ne 1 ]; then tail -n 200 "$JBOSS_HOME/standalone/log/server.log"; rollback; exit 1; fi
 
 echo "8/8 - Verificação HTTP"
-curl --fail --location --silent --show-error \
-  --max-time 30 --output /dev/null "$HEALTH_URL"
+curl --fail --location --silent --show-error --max-time 30 --output /dev/null "$HEALTH_URL"
 
 echo "PRODUÇÃO IMPLANTADA COM SUCESSO"
 echo "Commit: $COMMIT"
