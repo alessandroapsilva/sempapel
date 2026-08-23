@@ -7,7 +7,8 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 REPO_URL="https://github.com/alessandroapsilva/sempapel.git"
-REF="${1:-release/11.5-enfas}"
+REF="${1:-release/11.5.cem}"
+EXPECTED_VERSION="v11.5.cem"
 BASE="/home/enfas"
 JBOSS_HOME="$BASE/jboss-eap-7.2"
 DEPLOY="$JBOSS_HOME/standalone/deployments"
@@ -26,14 +27,11 @@ fi
 
 mkdir -p "$BASE/builds" "$BACKUP"
 
-command -v git >/dev/null
-command -v mvn >/dev/null
-command -v mysqldump >/dev/null
-command -v gzip >/dev/null
-command -v curl >/dev/null
+for cmd in git mvn mysqldump gzip curl unzip tar sha256sum; do
+  command -v "$cmd" >/dev/null || { echo "ERRO: comando ausente: $cmd"; exit 1; }
+done
 systemctl cat "$SERVICE" >/dev/null
 test -d "$DEPLOY"
-test -f "$WAR"
 
 AVAILABLE_KB="$(df -Pk "$BASE" | awk 'NR==2 {print $4}')"
 if [ "$AVAILABLE_KB" -lt 5242880 ]; then
@@ -46,7 +44,7 @@ mysqldump -u root -p --all-databases --single-transaction --quick --routines --t
 gzip -t "$BACKUP/mysql-todos-os-bancos.sql.gz"
 sha256sum "$BACKUP/mysql-todos-os-bancos.sql.gz" > "$BACKUP/mysql-todos-os-bancos.sql.gz.sha256"
 
-echo "2/8 - Clone limpo"
+echo "2/8 - Clone limpo da release CEM"
 git clone --branch "$REF" --single-branch "$REPO_URL" "$BUILD"
 cd "$BUILD"
 COMMIT="$(git rev-parse HEAD)"
@@ -54,6 +52,8 @@ git status --porcelain | grep -q . && { echo "ERRO: clone iniciou com alteraçõ
 git show -s --format='Commit: %H%nDescrição: %s'
 
 echo "3/8 - Validações de produção"
+test "$(tr -d '\r\n' < VERSION)" = "$EXPECTED_VERSION"
+grep -qx -- '-Dpatch.version=cem' .mvn/maven.config
 test ! -e "$BUILD/q"
 test ! -e "$BUILD/.github/workflows/adapt-pbdoc-edita.yml"
 test ! -e "$BUILD/.github/workflows/remove-anexar-final.yml"
@@ -64,24 +64,54 @@ for jsp in enfasOficio.jsp enfasMemorando.jsp enfasDespacho.jsp enfasInformacao.
 done
 test -s siga-ex/src/main/resources/db/mysql/sigaex/V123.0__ativa_modelos_jsp_institucionais_enfas.sql
 
-echo "4/8 - Build limpo"
+echo "4/8 - Build limpo $EXPECTED_VERSION"
 mvn -pl sigaex -am -DskipTests clean package
 NEW_WAR="$BUILD/sigaex/target/sigaex.war"
 test -s "$NEW_WAR"
-
-echo "5/8 - Backup do WAR em execução"
-cp -a "$WAR" "$BACKUP/sigaex.war.antes"
-sha256sum "$WAR" > "$BACKUP/sigaex.war.antes.sha256"
+unzip -p "$NEW_WAR" META-INF/MANIFEST.MF > "$BACKUP/manifest-novo.txt"
+grep -q '^Patch-Version: cem' "$BACKUP/manifest-novo.txt"
+grep -q '^Build-Label: v11.5.cem-' "$BACKUP/manifest-novo.txt"
 sha256sum "$NEW_WAR" > "$BACKUP/sigaex.war.novo.sha256"
+
+echo "5/8 - Backup do deployment atual"
+CURRENT_KIND="none"
+if [ -f "$WAR" ]; then
+  CURRENT_KIND="file"
+  cp -a "$WAR" "$BACKUP/sigaex.war.antes"
+  sha256sum "$WAR" > "$BACKUP/sigaex.war.antes.sha256"
+elif [ -d "$WAR" ]; then
+  CURRENT_KIND="dir"
+  tar -C "$DEPLOY" -czf "$BACKUP/sigaex.war.explodido.antes.tar.gz" sigaex.war
+  sha256sum "$BACKUP/sigaex.war.explodido.antes.tar.gz" > "$BACKUP/sigaex.war.explodido.antes.tar.gz.sha256"
+fi
+printf '%s\n' "$CURRENT_KIND" > "$BACKUP/deployment-anterior.tipo"
 printf '%s\n' "$COMMIT" > "$BACKUP/commit-implantado.txt"
+printf '%s\n' "$EXPECTED_VERSION" > "$BACKUP/versao-implantada.txt"
+
+cleanup_markers() {
+  for marker in deployed failed undeployed dodeploy isdeploying pending skipdeploy; do
+    rm -f "$DEPLOY/sigaex.war.$marker"
+  done
+}
 
 rollback() {
   echo "Executando rollback do SIGA-DOC"
   systemctl stop "$SERVICE" || true
-  install -o enfas -g enfas -m 0644 "$BACKUP/sigaex.war.antes" "$WAR"
-  for marker in deployed failed undeployed dodeploy; do
-    if [ -e "$DEPLOY/sigaex.war.$marker" ]; then mv "$DEPLOY/sigaex.war.$marker" "$BACKUP/rollback-sigaex.war.$marker-$(date +%s)"; fi
-  done
+  cleanup_markers
+  rm -rf "$WAR"
+  case "$CURRENT_KIND" in
+    file)
+      install -o enfas -g enfas -m 0644 "$BACKUP/sigaex.war.antes" "$WAR"
+      ;;
+    dir)
+      tar -C "$DEPLOY" -xzf "$BACKUP/sigaex.war.explodido.antes.tar.gz"
+      chown -R enfas:enfas "$WAR"
+      ;;
+    none)
+      echo "Não havia deployment anterior para restaurar."
+      return 0
+      ;;
+  esac
   touch "$DEPLOY/sigaex.war.dodeploy"
   chown enfas:enfas "$DEPLOY/sigaex.war.dodeploy"
   systemctl start "$SERVICE"
@@ -89,9 +119,8 @@ rollback() {
 
 echo "6/8 - Instalação controlada"
 systemctl stop "$SERVICE"
-for marker in deployed failed undeployed dodeploy; do
-  if [ -e "$DEPLOY/sigaex.war.$marker" ]; then mv "$DEPLOY/sigaex.war.$marker" "$BACKUP/sigaex.war.$marker"; fi
-done
+cleanup_markers
+rm -rf "$WAR"
 install -o enfas -g enfas -m 0644 "$NEW_WAR" "$WAR"
 touch "$DEPLOY/sigaex.war.dodeploy"
 chown enfas:enfas "$DEPLOY/sigaex.war.dodeploy"
@@ -109,12 +138,20 @@ for _ in $(seq 1 72); do
   if [ -f "$DEPLOY/sigaex.war.deployed" ]; then DEPLOYED=1; break; fi
   sleep 5
 done
-if [ "$DEPLOYED" -ne 1 ]; then tail -n 200 "$JBOSS_HOME/standalone/log/server.log"; rollback; exit 1; fi
+if [ "$DEPLOYED" -ne 1 ]; then
+  tail -n 200 "$JBOSS_HOME/standalone/log/server.log"
+  rollback
+  exit 1
+fi
 
 echo "8/8 - Verificação HTTP"
-curl --fail --location --silent --show-error --max-time 30 --output /dev/null "$HEALTH_URL"
+if ! curl --fail --location --silent --show-error --max-time 30 --output /dev/null "$HEALTH_URL"; then
+  rollback
+  exit 1
+fi
 
 echo "PRODUÇÃO IMPLANTADA COM SUCESSO"
+echo "Versão: $EXPECTED_VERSION"
 echo "Commit: $COMMIT"
 echo "Backup: $BACKUP"
 echo "WAR: $WAR"
