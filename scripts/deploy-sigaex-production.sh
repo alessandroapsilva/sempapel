@@ -7,8 +7,9 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 REPO_URL="https://github.com/alessandroapsilva/sempapel.git"
-REF="${1:-release/11.5.cem}"
-EXPECTED_VERSION="v11.5.cem"
+REF="${1:-release/11.5.100}"
+EXPECTED_VERSION="v11.5.100"
+EXPECTED_PATCH="100"
 BASE="/home/enfas"
 JBOSS_HOME="$BASE/jboss-eap-7.2"
 DEPLOY="$JBOSS_HOME/standalone/deployments"
@@ -44,7 +45,7 @@ mysqldump -u root -p --all-databases --single-transaction --quick --routines --t
 gzip -t "$BACKUP/mysql-todos-os-bancos.sql.gz"
 sha256sum "$BACKUP/mysql-todos-os-bancos.sql.gz" > "$BACKUP/mysql-todos-os-bancos.sql.gz.sha256"
 
-echo "2/8 - Clone limpo da release CEM"
+echo "2/8 - Clone limpo da release $EXPECTED_VERSION"
 git clone --branch "$REF" --single-branch "$REPO_URL" "$BUILD"
 cd "$BUILD"
 COMMIT="$(git rev-parse HEAD)"
@@ -53,7 +54,7 @@ git show -s --format='Commit: %H%nDescrição: %s'
 
 echo "3/8 - Validações de produção"
 test "$(tr -d '\r\n' < VERSION)" = "$EXPECTED_VERSION"
-grep -qx -- '-Dpatch.version=cem' .mvn/maven.config
+grep -qx -- "-Dpatch.version=$EXPECTED_PATCH" .mvn/maven.config
 test ! -e "$BUILD/q"
 test ! -e "$BUILD/.github/workflows/adapt-pbdoc-edita.yml"
 test ! -e "$BUILD/.github/workflows/remove-anexar-final.yml"
@@ -69,8 +70,8 @@ mvn -pl sigaex -am -DskipTests clean package
 NEW_WAR="$BUILD/sigaex/target/sigaex.war"
 test -s "$NEW_WAR"
 unzip -p "$NEW_WAR" META-INF/MANIFEST.MF > "$BACKUP/manifest-novo.txt"
-grep -q '^Patch-Version: cem' "$BACKUP/manifest-novo.txt"
-grep -q '^Build-Label: v11.5.cem-' "$BACKUP/manifest-novo.txt"
+grep -q "^Patch-Version: $EXPECTED_PATCH" "$BACKUP/manifest-novo.txt"
+grep -q "^Build-Label: $EXPECTED_VERSION-" "$BACKUP/manifest-novo.txt"
 sha256sum "$NEW_WAR" > "$BACKUP/sigaex.war.novo.sha256"
 
 echo "5/8 - Backup do deployment atual"
